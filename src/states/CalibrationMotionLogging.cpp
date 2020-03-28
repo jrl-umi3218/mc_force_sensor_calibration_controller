@@ -1,4 +1,4 @@
-#include "ForceSensorCalibration_Initial.h"
+#include "CalibrationMotionLogging.h"
 #include "../ForceSensorCalibration.h"
 #include <mc_rbdyn/rpy_utils.h>
 #include <mc_rtc/io_utils.h>
@@ -24,12 +24,12 @@ std::string to_string(const Eigen::MatrixBase<Derived>& v, const std::string & d
 }
 
 
-void ForceSensorCalibration_Initial::configure(const mc_rtc::Configuration & config)
+void CalibrationMotionLogging::configure(const mc_rtc::Configuration & config)
 {
   config_.load(config);
 }
 
-void ForceSensorCalibration_Initial::start(mc_control::fsm::Controller & ctl_)
+void CalibrationMotionLogging::start(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<ForceSensorCalibration &>(ctl_);
 
@@ -54,7 +54,7 @@ void ForceSensorCalibration_Initial::start(mc_control::fsm::Controller & ctl_)
   {
     if(!boost::filesystem::create_directory(outputPath_))
     {
-      LOG_ERROR_AND_THROW(std::runtime_error, "[ForceSensorCalibration] Could not create output folder " << outputPath_);
+      LOG_ERROR_AND_THROW(std::runtime_error, "[CalibrationMotionLogging] Could not create output folder " << outputPath_);
     }
   }
 
@@ -86,7 +86,7 @@ void ForceSensorCalibration_Initial::start(mc_control::fsm::Controller & ctl_)
 }
 
 
-bool ForceSensorCalibration_Initial::run(mc_control::fsm::Controller & ctl_)
+bool CalibrationMotionLogging::run(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<ForceSensorCalibration &>(ctl_);
 
@@ -121,11 +121,11 @@ bool ForceSensorCalibration_Initial::run(mc_control::fsm::Controller & ctl_)
   return false;
 }
 
-void ForceSensorCalibration_Initial::teardown(mc_control::fsm::Controller & ctl_)
+void CalibrationMotionLogging::teardown(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<ForceSensorCalibration &>(ctl_);
 
-  LOG_INFO("[ForceSensorCalibration] Saving calibration data to " << outputPath_);
+  LOG_INFO("[CalibrationMotionLogging] Saving calibration data to " << outputPath_);
   // Save all logger's output to file
   for(const auto & logger : loggers_)
   {
@@ -135,7 +135,7 @@ void ForceSensorCalibration_Initial::teardown(mc_control::fsm::Controller & ctl_
     {
       file << logger.second.str();
       file.close();
-      LOG_INFO("[ForceSensorCalibration] Calibration file " << filename << " written successfully.");
+      LOG_INFO("[CalibrationMotionLogging] Calibration file " << filename << " written successfully.");
     }
     else
     {
@@ -144,4 +144,4 @@ void ForceSensorCalibration_Initial::teardown(mc_control::fsm::Controller & ctl_
   }
 }
 
-EXPORT_SINGLE_STATE("ForceSensorCalibration_Initial", ForceSensorCalibration_Initial)
+EXPORT_SINGLE_STATE("CalibrationMotionLogging", CalibrationMotionLogging)

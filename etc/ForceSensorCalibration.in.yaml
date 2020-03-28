@@ -5,13 +5,15 @@ Managed: false
 StepByStep: true
 # Change idle behaviour, if true the state is kept until transition,
 # otherwise the FSM holds the last state until transition
-IdleKeepState: false
+IdleKeepState: true
 # Where to look for state libraries
 StatesLibraries:
+- "@MC_RTC_LIBDIR@/mc_controller/ForceSensorCalibration/states"
 - "@MC_STATES_DEFAULT_INSTALL_PREFIX@"
 - "@MC_STATES_INSTALL_PREFIX@"
 # Where to look for state files
 StatesFiles:
+  #- "@MC_RTC_LIBDIR@/mc_controller/ForceSensorCalibration/states/data"
 - "@MC_STATES_DEFAULT_INSTALL_PREFIX@/data"
 - "@MC_STATES_INSTALL_PREFIX@/data"
 # If true, state factory will be more verbose
@@ -38,49 +40,11 @@ collisions:
 contacts: {}
 
 # Implement some additional text states
-states:
-  InitialPosture:
-    base: MetaTasks
-    tasks:
-      Posture:
-        type: posture
-        robotIndex: 0
-        stiffness: 10
-        weight: 1000
-        target:
-          LSP: [0.0]
-          RSP: [0.0]
-        completion:
-          eval: 0.01
-
-  CalibrateHRP5P:
-    base: ForceSensorCalibration_Initial
-    outputPath: /tmp/calib-force-sensors
-    forceSensors:
-    - [LeftHandForceSensor, forceLH]
-    - [RightHandForceSensor, forceRH]
-    - [LeftFootForceSensor, forceLF]
-    - [RightFootForceSensor, forceRF]
-    joints:
-      # Left wrist
-    - name: LWRR
-      period: 6
-    - name: LWRP
-      period: 9
-    - name: LWRY
-      period: 15
-      # Right wrist
-    - name: RWRR
-      period: 6
-    - name: RWRP
-      period: 9
-    - name: RWRY
-      period: 15
-    duration: 120
-    stiffness: 10
+states: {}
 
 # Transitions map
 transitions:
-- [InitialPosture, OK, CalibrateHRP5P, Strict]
+- [ChooseRobot, hrp5_p, HRP5P::Calibrate, Auto]
+- [HRP5P::Calibrate, OK, HalfSitting, Auto]
 # Initial state
 init: InitialPosture

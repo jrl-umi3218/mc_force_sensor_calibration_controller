@@ -4,7 +4,7 @@
 #include <fstream>
 
 
-struct ForceSensorCalibration_Initial : mc_control::fsm::State
+struct CalibrationMotionLogging : mc_control::fsm::State
 {
 
     void configure(const mc_rtc::Configuration & config) override;
