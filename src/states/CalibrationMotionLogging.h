@@ -20,7 +20,7 @@ private:
     std::vector<std::function<void()>> jointUpdates_;
     double dt_ = 0;
     double duration_ = 60;
-    double stiffness_ = 10;
+    double savedStiffness_ = 10;
     // pair of sensor (name, logging alias) */
     std::vector<std::pair<std::string, std::string>> sensors_;
     std::map<std::string, std::stringstream> loggers_;

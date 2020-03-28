@@ -46,7 +46,6 @@ void CalibrationMotionLogging::start(mc_control::fsm::Controller & ctl_)
   }
   sensors_ = config_("forceSensors");
   config_("duration", duration_);
-  config_("stiffness", stiffness_);
   config_("outputPath", outputPath_);
 
   // Attempt to create the output files
@@ -59,7 +58,9 @@ void CalibrationMotionLogging::start(mc_control::fsm::Controller & ctl_)
   }
 
 
-  ctl_.getPostureTask(ctl_.robot().name())->stiffness(stiffness_);
+  auto postureTask = ctl_.getPostureTask(ctl_.robot().name());
+  savedStiffness_ = postureTask->stiffness();
+  postureTask->stiffness(config_("stiffness", 10));
   constexpr double PI = mc_rtc::constants::PI;
   for(const auto & jConfig : config_("joints"))
   {
@@ -142,6 +143,9 @@ void CalibrationMotionLogging::teardown(mc_control::fsm::Controller & ctl_)
       LOG_ERROR("Could not write logging information for " << logger.first << " to file: " << filename);
     }
   }
+
+  auto postureTask = ctl_.getPostureTask(ctl_.robot().name());
+  postureTask->stiffness(savedStiffness_);
 }
 
 EXPORT_SINGLE_STATE("CalibrationMotionLogging", CalibrationMotionLogging)
