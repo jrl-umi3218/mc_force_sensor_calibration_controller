@@ -1,6 +1,28 @@
 #include "ForceSensorCalibration_Initial.h"
-
 #include "../ForceSensorCalibration.h"
+#include <mc_rbdyn/rpy_utils.h>
+#include <mc_rtc/io_utils.h>
+#include <boost/filesystem.hpp>
+
+template <typename Derived>
+std::string to_string(const Eigen::MatrixBase<Derived>& v, const std::string & delimiter)
+{
+  if(v.cols() > 1)
+  {
+    LOG_ERROR_AND_THROW(std::runtime_error, "to_string on Eigen types expect a vector, got a matrix of size " << v.rows() << "x" << v.cols());
+  }
+  if(v.rows() == 0)
+  {
+    return "";
+  }
+  std::string out = std::to_string(v(0));
+  for (unsigned i = 1; i < v.size(); ++i)
+  {
+    out += delimiter + std::to_string(v(i));
+  }
+  return out;
+}
+
 
 void ForceSensorCalibration_Initial::configure(const mc_rtc::Configuration & config)
 {
@@ -18,10 +40,26 @@ void ForceSensorCalibration_Initial::start(mc_control::fsm::Controller & ctl_)
   {
     LOG_ERROR_AND_THROW(std::runtime_error, "Calibration controller expects a joints entry");
   }
+  if(!config_.has("forceSensors"))
+  {
+    LOG_ERROR_AND_THROW(std::runtime_error, "Calibration controller expects a forceSensors entry");
+  }
+  sensors_ = config_("forceSensors");
   config_("duration", duration_);
   config_("stiffness", stiffness_);
-  ctl_.getPostureTask(ctl_.robot().name())->stiffness(stiffness_);
+  config_("outputPath", outputPath_);
 
+  // Attempt to create the output files
+  if(!boost::filesystem::exists(outputPath_))
+  {
+    if(!boost::filesystem::create_directory(outputPath_))
+    {
+      LOG_ERROR_AND_THROW(std::runtime_error, "[ForceSensorCalibration] Could not create output folder " << outputPath_);
+    }
+  }
+
+
+  ctl_.getPostureTask(ctl_.robot().name())->stiffness(stiffness_);
   constexpr double PI = mc_rtc::constants::PI;
   for(const auto & jConfig : config_("joints"))
   {
@@ -47,6 +85,7 @@ void ForceSensorCalibration_Initial::start(mc_control::fsm::Controller & ctl_)
   }
 }
 
+
 bool ForceSensorCalibration_Initial::run(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<ForceSensorCalibration &>(ctl_);
@@ -56,6 +95,22 @@ bool ForceSensorCalibration_Initial::run(mc_control::fsm::Controller & ctl_)
   {
     updateJoint();
   }
+
+  auto & robot = ctl_.robot();
+  // Log RPY
+  loggers_["rpy"] << dt_ << " " << to_string(mc_rbdyn::rpyFromQuat(robot.bodySensor().orientation()), " ") << "\n";
+  // Log q
+  loggers_["q"] << dt_ << " " << mc_rtc::io::to_string(robot.encoderValues(), " ") << "\n";
+  // Log sensors
+  for(const auto & sensor: sensors_)
+  {
+    const auto & sensorName = sensor.first;
+    const auto & sensorAlias = sensor.second;
+    loggers_[sensorAlias] << dt_ << " "
+        << to_string(robot.forceSensor(sensorName).force(), " ") << " "
+        << to_string(robot.forceSensor(sensorName).couple(), " ") << "\n";
+  }
+
 
   dt_ += ctl_.timeStep;
   if(dt_ > duration_)
@@ -69,6 +124,24 @@ bool ForceSensorCalibration_Initial::run(mc_control::fsm::Controller & ctl_)
 void ForceSensorCalibration_Initial::teardown(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<ForceSensorCalibration &>(ctl_);
+
+  LOG_INFO("[ForceSensorCalibration] Saving calibration data to " << outputPath_);
+  // Save all logger's output to file
+  for(const auto & logger : loggers_)
+  {
+    const auto filename = outputPath_ + "/calib-force-sensors." + logger.first;
+    std::ofstream file(filename);
+    if(file)
+    {
+      file << logger.second.str();
+      file.close();
+      LOG_INFO("[ForceSensorCalibration] Calibration file " << filename << " written successfully.");
+    }
+    else
+    {
+      LOG_ERROR("Could not write logging information for " << logger.first << " to file: " << filename);
+    }
+  }
 }
 
 EXPORT_SINGLE_STATE("ForceSensorCalibration_Initial", ForceSensorCalibration_Initial)

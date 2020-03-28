@@ -55,6 +55,12 @@ states:
 
   CalibrateHRP5P:
     base: ForceSensorCalibration_Initial
+    outputPath: /tmp/calib-force-sensors
+    forceSensors:
+    - [LeftHandForceSensor, forceLH]
+    - [RightHandForceSensor, forceRH]
+    - [LeftFootForceSensor, forceLF]
+    - [RightFootForceSensor, forceRF]
     joints:
       # Left wrist
     - name: LWRR
