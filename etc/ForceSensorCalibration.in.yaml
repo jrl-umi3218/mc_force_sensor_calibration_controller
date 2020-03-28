@@ -1,0 +1,62 @@
+---
+# If true, the FSM transitions are managed by an external tool
+Managed: false
+# If true and the FSM is self-managed, transitions should be triggered
+StepByStep: true
+# Change idle behaviour, if true the state is kept until transition,
+# otherwise the FSM holds the last state until transition
+IdleKeepState: false
+# Where to look for state libraries
+StatesLibraries:
+- "@MC_STATES_DEFAULT_INSTALL_PREFIX@"
+- "@MC_STATES_INSTALL_PREFIX@"
+# Where to look for state files
+StatesFiles:
+- "@MC_STATES_DEFAULT_INSTALL_PREFIX@/data"
+- "@MC_STATES_INSTALL_PREFIX@/data"
+# If true, state factory will be more verbose
+VerboseStateFactory: false
+# Additional robots to load
+robots:
+  ground:
+    module: env/ground
+# General constraints, always on
+constraints:
+- type: contact
+- type: dynamics
+  robotIndex: 0
+  damper: [0.1, 0.01, 0.5]
+- type: compoundJoint
+  robotIndex: 0
+# Collision constraint
+collisions:
+- type: collision
+  r1Index: 0
+  r2Index: 0
+  useMinimal: true
+# Initial set of contacts
+contacts:
+- r1: jvrc1
+  r2: ground
+  r1Surface: LeftFoot
+  r2Surface: AllGround
+- r1: jvrc1
+  r2: ground
+  r1Surface: RightFoot
+  r2Surface: AllGround
+
+# Some options for a specific robot
+jvrc1:
+  posture:
+    stiffness: 1
+    weight: 10
+  ff:
+    stiffness: 2
+    weight: 100
+# Implement some additional text states
+states: {}
+# Transitions map
+transitions:
+- [ForceSensorCalibration_Initial, OK, ForceSensorCalibration_Initial, Strict]
+# Initial state
+init: ForceSensorCalibration_Initial
