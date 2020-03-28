@@ -2,6 +2,7 @@
 
 #include <mc_control/fsm/State.h>
 
+
 struct ForceSensorCalibration_Initial : mc_control::fsm::State
 {
 
@@ -13,4 +14,9 @@ struct ForceSensorCalibration_Initial : mc_control::fsm::State
 
     void teardown(mc_control::fsm::Controller & ctl) override;
 private:
+    mc_rtc::Configuration config_;
+    std::vector<std::function<void()>> jointUpdates_;
+    double dt_ = 0;
+    double duration_ = 60;
+    double stiffness_ = 10;
 };

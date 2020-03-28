@@ -23,7 +23,7 @@ robots:
 # General constraints, always on
 constraints:
 - type: contact
-- type: dynamics
+- type: kinematics
   robotIndex: 0
   damper: [0.1, 0.01, 0.5]
 - type: compoundJoint
@@ -35,28 +35,46 @@ collisions:
   r2Index: 0
   useMinimal: true
 # Initial set of contacts
-contacts:
-- r1: jvrc1
-  r2: ground
-  r1Surface: LeftFoot
-  r2Surface: AllGround
-- r1: jvrc1
-  r2: ground
-  r1Surface: RightFoot
-  r2Surface: AllGround
+contacts: {}
 
-# Some options for a specific robot
-jvrc1:
-  posture:
-    stiffness: 1
-    weight: 10
-  ff:
-    stiffness: 2
-    weight: 100
 # Implement some additional text states
-states: {}
+states:
+  InitialPosture:
+    base: MetaTasks
+    tasks:
+      Posture:
+        type: posture
+        robotIndex: 0
+        stiffness: 10
+        weight: 1000
+        target:
+          LSP: [0.0]
+          RSP: [0.0]
+        completion:
+          eval: 0.01
+
+  CalibrateHRP5P:
+    base: ForceSensorCalibration_Initial
+    joints:
+      # Left wrist
+    - name: LWRR
+      period: 6
+    - name: LWRP
+      period: 9
+    - name: LWRY
+      period: 15
+      # Right wrist
+    - name: RWRR
+      period: 6
+    - name: RWRP
+      period: 9
+    - name: RWRY
+      period: 15
+    duration: 120
+    stiffness: 10
+
 # Transitions map
 transitions:
-- [ForceSensorCalibration_Initial, OK, ForceSensorCalibration_Initial, Strict]
+- [InitialPosture, OK, CalibrateHRP5P, Strict]
 # Initial state
-init: ForceSensorCalibration_Initial
+init: InitialPosture
