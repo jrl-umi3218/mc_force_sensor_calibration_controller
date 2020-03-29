@@ -1,6 +1,8 @@
 Force Sensor Calibration
 ==
 
+**IMPORTANT WARNING: This controller must be run with the robot in the air as it'll move the feet around**
+
 This controller allows to calibrate the force sensors of HRP robots to remove the effect of gravity due to links attached to the force sensors (grippers/feet).
 
 To calibrate, simply run this controller and follow the instructions in the GUI.
@@ -8,7 +10,7 @@ To calibrate, simply run this controller and follow the instructions in the GUI.
 Enabled: ForceSensorCalibration
 ```
 
-*This controller must be run with the robot in the air as it'll move the feet around*
+**IMPORTANT WARNING: This controller must be run with the robot in the air as it'll move the feet around**
 
 If all goes well, it will:
 - make the joints move in periodic motions
@@ -18,6 +20,16 @@ If all goes well, it will:
   - Display live plots with the raw and calibrated measurements. Check that the calibrated measurements are all close to zero. If that's the case, calibration was successful, and you should click on *Save calibration* in the GUI if you wish to make it the new default calibration.
 
 ![Example calibration result for HRP4](doc/hrp4_calibration_example.png)
+
+
+Note for simulation
+==
+
+If you wish to calibrate in simulation in choreonoid, this is a bit problematic as the feet are on the ground.
+
+You may either:
+- Find a way to have the robot in the air during a dynamic simulation (if you know how, please let me know).
+- Comment out the leg joints in the configuration file and only calibrate the grippers.
 
 TroubleShooting
 ==
