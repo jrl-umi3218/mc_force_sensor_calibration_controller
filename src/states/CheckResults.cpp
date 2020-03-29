@@ -5,10 +5,6 @@
 
 namespace bfs = boost::filesystem;
 
-void CheckResults::configure(const mc_rtc::Configuration & config)
-{
-  config("forceSensors", sensors_);
-}
 
 void CheckResults::start(mc_control::fsm::Controller & ctl)
 {
@@ -16,15 +12,23 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
   using namespace mc_rtc::gui;
   using Style = mc_rtc::gui::plot::Style;
 
-  // Load new calibration parameters
-  for(const auto & sensor : sensors_)
+  const auto & robotConf = ctl.config()(robot.name());
+  if(!robotConf.has("forceSensors"))
   {
+    LOG_ERROR_AND_THROW(std::runtime_error, "Calibration controller expects a forceSensors entry");
+  }
+  sensors_ = robotConf("forceSensors");
+
+  // Load new calibration parameters
+  for(const auto & sensorP : sensors_)
+  {
+    auto sensor = sensorP.first;
     const auto filename = "/tmp/calib-force-sensors-result-"+ctl.robot().name()+"/calib_data."+sensor;
     LOG_INFO("[ForceSensorCalibration] Loading calibration file " << filename);
     ctl.robot().forceSensor(sensor).loadCalibrator(filename, ctl.robot().mbc().gravity);
 
     ctl.gui()->addPlot(sensor,
-                   plot::X({"t", {t_ + 0, t_ + 10}}, [this]() { return t_; }),
+                   plot::X({"t", {t_ + 0, t_ + 60}}, [this]() { return t_; }),
                    plot::Y("Wrenches calibrated (x)", [this, &robot]() { return robot.forceSensor("RightHandForceSensor").wrenchWithoutGravity(robot).force().x(); }, Color::Red, Style::Solid),
                    plot::Y("Wrenches calibrated (y)", [this, &robot]() { return robot.forceSensor("RightHandForceSensor").wrenchWithoutGravity(robot).force().y(); }, Color::Green, Style::Solid),
                    plot::Y("Wrenches calibrated (y)", [this, &robot]() { return robot.forceSensor("RightHandForceSensor").wrenchWithoutGravity(robot).force().z(); }, Color::Blue, Style::Solid),
@@ -56,8 +60,9 @@ bool CheckResults::run(mc_control::fsm::Controller & ctl_)
 
 void CheckResults::saveCalibration(mc_control::fsm::Controller & ctl)
 {
-  for(const auto & sensor : sensors_)
+  for(const auto & sensorP : sensors_)
   {
+    const auto & sensor = sensorP.first;
     const auto source_path = "/tmp/calib-force-sensors-result-"+ctl.robot().name() + "/" + std::string("calib_data." + sensor);
     const auto destination_path = ctl.robot().module().calib_dir + std::string("calib_data." + sensor);
     try
@@ -75,8 +80,9 @@ void CheckResults::saveCalibration(mc_control::fsm::Controller & ctl)
 
 void CheckResults::teardown(mc_control::fsm::Controller & ctl)
 {
-  for(const auto & sensor : sensors_)
+  for(const auto & sensorP : sensors_)
   {
+    const auto & sensor = sensorP.first;
     ctl.gui()->removePlot(sensor);
     ctl.gui()->removeElement({}, "Status");
     ctl.gui()->removeElement({}, "Save calibration");

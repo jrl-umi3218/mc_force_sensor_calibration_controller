@@ -40,11 +40,158 @@ collisions:
 contacts: {}
 
 # Implement some additional text states
-states: {}
+states:
+  Calibrate:
+    base: Parallel
+    states: [CalibrationMotionLogging, CalibrationMotion]
+
+  CheckCalibration:
+    base: Parallel
+    states: [CalibrationMotion, CheckResults]
 
 # Transitions map
 transitions:
-- [ChooseRobot, hrp5_p, HRP5P::Calibrate, Auto]
-- [ChooseRobot, hrp2_drc, HRP2DRC::Calibrate, Auto]
+- [InitialPosture, OK, Calibrate, Auto]
+- [Calibrate, OK, RunCalibrationScript, Auto]
+- [RunCalibrationScript, SUCCESS, CheckCalibration, Auto]
+- [RunCalibrationScript, FAILED, HalfSitting, Auto]
+- [CheckCalibration, OK, HalfSitting, Auto]
 # Initial state
 init: InitialPosture
+
+plots: false
+hrp4:
+  forceSensors:
+  - [LeftHandForceSensor, forceLH]
+  - [RightHandForceSensor, forceRH]
+  - [LeftFootForceSensor, forceLF]
+  - [RightFootForceSensor, forceRF]
+  initial_posture:
+    completion:
+      eval: 0.06
+    target:
+      ## Arms
+      R_SHOULDER_P: [-0.4]
+      L_SHOULDER_P: [-0.4]
+      R_SHOULDER_R: [-0.5]
+      L_SHOULDER_R: [0.5]
+      R_ELBOW_P: [-1.5]
+      L_ELBOW_P: [-1.5]
+      ## Legs
+      L_HIP_R: [0.25]
+      R_HIP_R: [-0.25]
+  motion:
+    duration: 30
+    stiffness: 10
+    joints:
+      # Left wrist
+    - name: L_WRIST_P
+      period: 10 
+    - name: L_WRIST_R
+      period: 16 
+    - name: L_WRIST_Y
+      period: 20 
+      # right wrist
+    - name: R_WRIST_P
+      period: 10 
+    - name: R_WRIST_R
+      period: 16 
+    - name: R_WRIST_Y
+      period: 20 
+      # Left leg
+    - name: L_WRIST_P
+      period: 10 
+    - name: L_WRIST_R
+      period: 16 
+    - name: L_WRIST_Y
+      period: 20 
+      # right wrist
+    - name: R_WRIST_P
+      period: 10 
+    - name: R_WRIST_R
+      period: 16 
+    - name: R_WRIST_Y
+      period: 20 
+      ## Legs
+    - name: R_ANKLE_P
+      period: 10 
+    - name: L_ANKLE_P
+      period: 15 
+    - name: R_ANKLE_R
+      period: 10 
+    - name: L_ANKLE_R
+      period: 15 
+      
+hrp5p:
+  forceSensors:
+  - [LeftHandForceSensor, forceLH]
+  - [RightHandForceSensor, forceRH]
+  - [LeftFootForceSensor, forceLF]
+  - [RightFootForceSensor, forceRF]
+  initial_posture:
+    completion:
+      eval: 0.01
+    target:
+      LSP: [0.0]
+      RSP: [0.0]
+  motion:
+    duration: 30
+    stiffness: 10
+    joints:
+      # Left wrist
+    - name: LWRR
+      period: 6
+    - name: LWRP
+      period: 9
+    - name: LWRY
+      period: 15
+      # Right wrist
+    - name: RWRR
+      period: 6
+    - name: RWRP
+      period: 9
+    - name: RWRY
+      period: 15
+
+hrp2_drc: 
+  forceSensors:
+  - [LeftHandForceSensor, forceLH]
+  - [RightHandForceSensor, forceRH]
+  - [LeftFootForceSensor, forceLF]
+  - [RightFootForceSensor, forceRF]
+  initial_posture:
+    completion:
+      eval: 0.01
+    target:
+      LARM_JOINT0: [0.0]
+      RARM_JOINT0: [0.0]
+      RLEG_JOINT1: [-0.2]
+      LLEG_JOINT1: [0.2]
+  motion:
+    joints:
+      # Left wrist
+      - name: LARM_JOINT4
+        period: 15
+      - name: LARM_JOINT5
+        period: 12
+      - name: LARM_JOINT6
+        period: 10 
+      # right wrist
+      - name: RARM_JOINT4
+        period: 15
+      - name: RARM_JOINT5
+        period: 12 
+      - name: RARM_JOINT6
+        period: 10 
+      # left leg
+      - name: LLEG_JOINT4
+        period: 6
+      - name: LLEG_JOINT5
+        period: 9 
+      # right leg
+      - name: RLEG_JOINT4
+        period: 10 
+      - name: RLEG_JOINT5
+        period: 12 
+    duration: 30
+    stiffness: 10

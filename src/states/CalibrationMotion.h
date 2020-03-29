@@ -5,7 +5,7 @@
 struct CalibrationMotion : mc_control::fsm::State
 {
 
-    void configure(const mc_rtc::Configuration & config) override;
+    inline void configure(const mc_rtc::Configuration & config) override {}
 
     void start(mc_control::fsm::Controller & ctl) override;
 
@@ -14,7 +14,6 @@ struct CalibrationMotion : mc_control::fsm::State
     void teardown(mc_control::fsm::Controller & ctl) override;
 
 private:
-    mc_rtc::Configuration config_;
     std::vector<std::function<void()>> jointUpdates_;
     double dt_ = 0;
     double duration_ = 60;

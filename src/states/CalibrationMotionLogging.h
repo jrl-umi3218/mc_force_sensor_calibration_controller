@@ -6,7 +6,7 @@
 struct CalibrationMotionLogging : mc_control::fsm::State
 {
 
-    void configure(const mc_rtc::Configuration & config) override;
+    inline void configure(const mc_rtc::Configuration & config) override {}
 
     void start(mc_control::fsm::Controller & ctl) override;
 
@@ -15,7 +15,6 @@ struct CalibrationMotionLogging : mc_control::fsm::State
     void teardown(mc_control::fsm::Controller & ctl) override;
 
 private:
-    mc_rtc::Configuration config_;
     double dt_ = 0;
     // pair of sensor (name, logging alias) */
     std::vector<std::pair<std::string, std::string>> sensors_;

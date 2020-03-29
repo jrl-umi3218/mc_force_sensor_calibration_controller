@@ -1,4 +1,5 @@
 add_fsm_state_simple(ChooseRobot)
+add_fsm_state_simple(InitialPosture)
 add_fsm_state_simple(CalibrationMotion)
 add_fsm_state_simple(CalibrationMotionLogging)
 add_fsm_state_simple(RunCalibrationScript)

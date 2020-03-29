@@ -24,22 +24,19 @@ std::string to_string(const Eigen::MatrixBase<Derived>& v, const std::string & d
 }
 
 
-void CalibrationMotionLogging::configure(const mc_rtc::Configuration & config)
-{
-  config_.load(config);
-}
-
 void CalibrationMotionLogging::start(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<ForceSensorCalibration &>(ctl_);
 
-  if(!config_.has("forceSensors"))
+  auto & robot = ctl.robot();
+  auto robotConf = ctl.config()(robot.name());
+
+  if(!robotConf.has("forceSensors"))
   {
     LOG_ERROR_AND_THROW(std::runtime_error, "Calibration controller expects a forceSensors entry");
   }
-  sensors_ = config_("forceSensors");
-  // config_("outputPath", outputPath_);
-  outputPath_ = "/tmp/calib-force-sensors-data-" + ctl_.robot().name();
+  sensors_ = robotConf("forceSensors");
+  outputPath_ = "/tmp/calib-force-sensors-data-" + robot.name();
 
   // Attempt to create the output files
   if(!boost::filesystem::exists(outputPath_))

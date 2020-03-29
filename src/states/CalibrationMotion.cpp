@@ -1,28 +1,23 @@
 #include "CalibrationMotion.h"
 #include "../ForceSensorCalibration.h"
 
-void CalibrationMotion::configure(const mc_rtc::Configuration & config)
-{
-  config_.load(config);
-}
 
-void CalibrationMotion::start(mc_control::fsm::Controller & ctl_)
+void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
 {
-  auto & ctl = static_cast<ForceSensorCalibration &>(ctl_);
-
   auto & robot = ctl.robot();
-
-  if(!config_.has("joints"))
+  auto robotConf = ctl.config()(robot.name());
+  if(!robotConf.has("motion"))
   {
     LOG_ERROR_AND_THROW(std::runtime_error, "Calibration controller expects a joints entry");
   }
-  config_("duration", duration_);
+  auto conf = robotConf("motion");
+  conf("duration", duration_);
 
-  auto postureTask = ctl_.getPostureTask(ctl_.robot().name());
+  auto postureTask = ctl.getPostureTask(robot.name());
   savedStiffness_ = postureTask->stiffness();
-  postureTask->stiffness(config_("stiffness", 10));
+  postureTask->stiffness(conf("stiffness", 10));
   constexpr double PI = mc_rtc::constants::PI;
-  for(const auto & jConfig : config_("joints"))
+  for(const auto & jConfig : conf("joints"))
   {
     std::string name = jConfig("name");
     double period = jConfig("period");
@@ -36,11 +31,11 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl_)
     double start_dt = period * (acos(sqrt(start - lower)/sqrt(upper-lower))) / PI;
     jointUpdates_.emplace_back(
       /* f(t): periodic function that moves the joint between its limits */
-      [this, &ctl_, PI, start, lower, upper, start_dt, period, name]()
+      [this, postureTask, PI, start, lower, upper, start_dt, period, name]()
       {
         auto t = start_dt + dt_;
         auto q = lower + (upper-lower) * (1 + cos((2*PI*t)/period)) / 2;
-        ctl_.getPostureTask(ctl_.robot().name())->target({{name, {q}}});
+        postureTask->target({{name, {q}}});
       }
     );
   }

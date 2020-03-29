@@ -5,7 +5,7 @@
 struct CheckResults : mc_control::fsm::State
 {
 
-    void configure(const mc_rtc::Configuration & config) override;
+    inline void configure(const mc_rtc::Configuration & config) override {}
 
     void start(mc_control::fsm::Controller & ctl) override;
 
@@ -17,5 +17,5 @@ struct CheckResults : mc_control::fsm::State
 
  private:
     double t_ = 0;
-    std::vector<std::string> sensors_;
+    std::vector<std::pair<std::string, std::string>> sensors_;
 };
