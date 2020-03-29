@@ -1,0 +1,3 @@
+[submodule "force_sensors_calibration"]
+	path = force_sensors_calibration
+	url = git@gite.lirmm.fr:multi-contact/force_sensors_calibration.git

@@ -1,5 +1,6 @@
 #include "RunCalibrationScript.h"
 #include "../ForceSensorCalibration.h"
+#include "../../build/src/config.h"
 #include <mc_rbdyn/rpy_utils.h>
 #include <mc_rtc/io_utils.h>
 #include <boost/filesystem.hpp>
@@ -16,11 +17,14 @@ void RunCalibrationScript::configure(const mc_rtc::Configuration & config)
 void RunCalibrationScript::start(mc_control::fsm::Controller & ctl_)
 {
   outputPath_ = "/tmp/calib-force-sensors-result-" + ctl_.robot().name();
+  std::string moduleName = ctl_.config()("MainRobot");
+  std::string robotName = ctl_.robot().name();
 
   th_ = std::thread(
-      [this,&ctl_]()
+      [this,robotName, moduleName]()
       {
-        std::string command = "~/src/force_sensors_calibration/calib_force.py --robot HRP2DRC --dry-run /tmp/calib-force-sensors-data-"+ctl_.robot().name()+" --dry-run-path " + outputPath_ + " wrist";
+        std::string command = std::string(calib_config::CALIBRATION_SCRIPT_EXECUTABLE) + " --robot " + moduleName + " --dry-run /tmp/calib-force-sensors-data-"+robotName+" --dry-run-path " + outputPath_ + " all";
+        LOG_INFO("Executing calibration script: " << command);
         auto result = std::system(command.c_str());
         success_ = (result == 0);
         completed_ = true;

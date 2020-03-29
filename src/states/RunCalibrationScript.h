@@ -22,5 +22,5 @@ private:
     std::thread th_;
     std::atomic<bool> completed_{false};
     bool success_ = false;
-    std::string outputPath_ = "";
+    std::string outputPath_;
 };
