@@ -1,4 +1,7 @@
-add_fsm_state_simple(CalibrationMotionLogging)
 add_fsm_state_simple(ChooseRobot)
+add_fsm_state_simple(CalibrationMotion)
+add_fsm_state_simple(CalibrationMotionLogging)
+add_fsm_state_simple(RunCalibrationScript)
+add_fsm_state_simple(CheckResults)
 
 add_fsm_data_directory(data)

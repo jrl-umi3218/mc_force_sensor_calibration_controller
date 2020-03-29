@@ -1,9 +1,8 @@
 #pragma once
 
 #include <mc_control/fsm/State.h>
-#include <fstream>
 
-struct CalibrationMotionLogging : mc_control::fsm::State
+struct CalibrationMotion : mc_control::fsm::State
 {
 
     void configure(const mc_rtc::Configuration & config) override;
@@ -16,9 +15,9 @@ struct CalibrationMotionLogging : mc_control::fsm::State
 
 private:
     mc_rtc::Configuration config_;
+    std::vector<std::function<void()>> jointUpdates_;
     double dt_ = 0;
-    // pair of sensor (name, logging alias) */
-    std::vector<std::pair<std::string, std::string>> sensors_;
-    std::map<std::string, std::stringstream> loggers_;
-    std::string outputPath_ = "";
+    double duration_ = 60;
+    double savedStiffness_ = 10;
+    bool interrupted_ = false;
 };

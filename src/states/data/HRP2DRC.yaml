@@ -14,14 +14,8 @@ HRP2DRC::InitialPosture_:
       completion:
         eval: 0.01
 
-HRP2DRC::Calibrate_:
-  base: CalibrationMotionLogging 
-  outputPath: /tmp/calib-force-sensors
-  forceSensors:
-  - [LeftHandForceSensor, forceLH]
-  - [RightHandForceSensor, forceRH]
-  - [LeftFootForceSensor, forceLF]
-  - [RightFootForceSensor, forceRF]
+HRP2DRC::CalibrationMotion_:
+  base: CalibrationMotion
   joints:
     # Left wrist
   - name: LARM_JOINT4
@@ -47,11 +41,37 @@ HRP2DRC::Calibrate_:
     #   period: 10 
     # - name: RLEG_JOINT5
     #   period: 12 
-  duration: 60
+  duration: 30
   stiffness: 10
+
+HRP2DRC::Calibrate_:
+  base: Parallel
+  states: [CalibrationMotionLogging, HRP2DRC::CalibrationMotion_]
+  configs:
+    CalibrationMotionLogging:
+      outputPath: /tmp/calib-force-sensors
+      forceSensors:
+      - [LeftHandForceSensor, forceLH]
+      - [RightHandForceSensor, forceRH]
+      - [LeftFootForceSensor, forceLF]
+      - [RightFootForceSensor, forceRF]
+
+HRP2DRC::CheckCalibration_:
+  base: Parallel
+  states: [HRP2DRC::CalibrationMotion_, CheckResults]
+  configs:
+    CheckResults:
+      forceSensors:
+      - LeftHandForceSensor
+      - RightHandForceSensor
+      - LeftFootForceSensor
+      - RightFootForceSensor
 
 HRP2DRC::Calibrate:
   base: Meta
   transitions:
   - [HRP2DRC::InitialPosture_, OK, HRP2DRC::Calibrate_, Auto]
-  - [HRP2DRC::Calibrate_, OK, HalfSitting, Auto]
+  - [HRP2DRC::Calibrate_, OK, RunCalibrationScript, Auto]
+  - [RunCalibrationScript, SUCCESS, HRP2DRC::CheckCalibration_, Auto]
+  - [RunCalibrationScript, FAILED, HalfSitting, Auto]
+  - [HRP2DRC::CheckCalibration_, OK, HalfSitting, Auto]

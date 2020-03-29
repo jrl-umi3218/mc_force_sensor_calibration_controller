@@ -2,9 +2,13 @@
 
 #include <mc_control/fsm/State.h>
 #include <fstream>
+#include <atomic>
+#include <thread>
 
-struct CalibrationMotionLogging : mc_control::fsm::State
+struct RunCalibrationScript : mc_control::fsm::State
 {
+
+    ~RunCalibrationScript();
 
     void configure(const mc_rtc::Configuration & config) override;
 
@@ -15,10 +19,8 @@ struct CalibrationMotionLogging : mc_control::fsm::State
     void teardown(mc_control::fsm::Controller & ctl) override;
 
 private:
-    mc_rtc::Configuration config_;
-    double dt_ = 0;
-    // pair of sensor (name, logging alias) */
-    std::vector<std::pair<std::string, std::string>> sensors_;
-    std::map<std::string, std::stringstream> loggers_;
+    std::thread th_;
+    std::atomic<bool> completed_{false};
+    bool success_ = false;
     std::string outputPath_ = "";
 };

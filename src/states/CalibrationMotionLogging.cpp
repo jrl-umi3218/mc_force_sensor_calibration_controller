@@ -33,20 +33,13 @@ void CalibrationMotionLogging::start(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<ForceSensorCalibration &>(ctl_);
 
-  auto & robot = ctl.robot();
-
-
-  if(!config_.has("joints"))
-  {
-    LOG_ERROR_AND_THROW(std::runtime_error, "Calibration controller expects a joints entry");
-  }
   if(!config_.has("forceSensors"))
   {
     LOG_ERROR_AND_THROW(std::runtime_error, "Calibration controller expects a forceSensors entry");
   }
   sensors_ = config_("forceSensors");
-  config_("duration", duration_);
-  config_("outputPath", outputPath_);
+  // config_("outputPath", outputPath_);
+  outputPath_ = "/tmp/calib-force-sensors-data-" + ctl_.robot().name();
 
   // Attempt to create the output files
   if(!boost::filesystem::exists(outputPath_))
@@ -56,65 +49,12 @@ void CalibrationMotionLogging::start(mc_control::fsm::Controller & ctl_)
       LOG_ERROR_AND_THROW(std::runtime_error, "[CalibrationMotionLogging] Could not create output folder " << outputPath_);
     }
   }
-
-  auto postureTask = ctl_.getPostureTask(ctl_.robot().name());
-  savedStiffness_ = postureTask->stiffness();
-  postureTask->stiffness(config_("stiffness", 10));
-  constexpr double PI = mc_rtc::constants::PI;
-  for(const auto & jConfig : config_("joints"))
-  {
-    std::string name = jConfig("name");
-    double period = jConfig("period");
-    auto jidx = robot.jointIndexByName(name);
-    auto start = robot.mbc().q[jidx][0];
-    auto lower = robot.ql()[jidx][0];
-    auto upper = robot.qu()[jidx][0];
-    // compute the starting time such that the joint does not move initially
-    // that is such that f(start_dt) = start
-    // i.e start_dt = f^(-1)(start)
-    double start_dt = period * (acos(sqrt(start - lower)/sqrt(upper-lower))) / PI;
-    jointUpdates_.emplace_back(
-      /* f(t): periodic function that moves the joint between its limits */
-      [this, &ctl_, PI, start, lower, upper, start_dt, period, name]()
-      {
-        auto t = start_dt + dt_;
-        auto q = lower + (upper-lower) * (1 + cos((2*PI*t)/period)) / 2;
-        ctl_.getPostureTask(ctl_.robot().name())->target({{name, {q}}});
-      }
-    );
-  }
-
-  ctl.gui()->addElement({},
-                         mc_rtc::gui::NumberSlider("Progress",
-                                                   [this]()
-                                                   {
-                                                    return dt_;
-                                                   },
-                                                   [](double)
-                                                   {
-                                                   },
-                                                   0,
-                                                   duration_),
-                         mc_rtc::gui::Button("Stop calibration",
-                                             [this]()
-                                             {
-                                              LOG_WARNING("[ForceSensorCalibration] Calibration motion was interrupted before it's planned duration (" << dt_ << " / " << duration_ << ")");
-                                              interrupted_ = true;
-                                             }
-                                            )
-                         );
 }
 
 
 bool CalibrationMotionLogging::run(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<ForceSensorCalibration &>(ctl_);
-
-  // Update all joint positions
-  for(auto & updateJoint : jointUpdates_)
-  {
-    updateJoint();
-  }
 
   auto & robot = ctl_.robot();
   // Log RPY
@@ -133,12 +73,8 @@ bool CalibrationMotionLogging::run(mc_control::fsm::Controller & ctl_)
 
 
   dt_ += ctl_.timeStep;
-  if(interrupted_ || dt_ > duration_)
-  {
-    output("OK");
-    return true;
-  }
-  return false;
+  output("OK");
+  return true;
 }
 
 void CalibrationMotionLogging::teardown(mc_control::fsm::Controller & ctl_)
@@ -162,10 +98,6 @@ void CalibrationMotionLogging::teardown(mc_control::fsm::Controller & ctl_)
       LOG_ERROR("Could not write logging information for " << logger.first << " to file: " << filename);
     }
   }
-
-  auto postureTask = ctl_.getPostureTask(ctl_.robot().name());
-  postureTask->stiffness(savedStiffness_);
-  ctl_.gui()->removeElement({}, "Progress");
 }
 
 EXPORT_SINGLE_STATE("CalibrationMotionLogging", CalibrationMotionLogging)
