@@ -13,7 +13,7 @@ StatesLibraries:
 - "@MC_STATES_INSTALL_PREFIX@"
 # Where to look for state files
 StatesFiles:
-  #- "@MC_RTC_LIBDIR@/mc_controller/ForceSensorCalibration/states/data"
+  # - "@MC_RTC_LIBDIR@/mc_controller/ForceSensorCalibration/states/data"
 - "@MC_STATES_DEFAULT_INSTALL_PREFIX@/data"
 - "@MC_STATES_INSTALL_PREFIX@/data"
 # If true, state factory will be more verbose
@@ -45,6 +45,6 @@ states: {}
 # Transitions map
 transitions:
 - [ChooseRobot, hrp5_p, HRP5P::Calibrate, Auto]
-- [HRP5P::Calibrate, OK, HalfSitting, Auto]
+- [ChooseRobot, hrp2_drc, HRP2DRC::Calibrate, Auto]
 # Initial state
 init: InitialPosture

@@ -57,7 +57,6 @@ void CalibrationMotionLogging::start(mc_control::fsm::Controller & ctl_)
     }
   }
 
-
   auto postureTask = ctl_.getPostureTask(ctl_.robot().name());
   savedStiffness_ = postureTask->stiffness();
   postureTask->stiffness(config_("stiffness", 10));
@@ -84,6 +83,26 @@ void CalibrationMotionLogging::start(mc_control::fsm::Controller & ctl_)
       }
     );
   }
+
+  ctl.gui()->addElement({},
+                         mc_rtc::gui::NumberSlider("Progress",
+                                                   [this]()
+                                                   {
+                                                    return dt_;
+                                                   },
+                                                   [](double)
+                                                   {
+                                                   },
+                                                   0,
+                                                   duration_),
+                         mc_rtc::gui::Button("Stop calibration",
+                                             [this]()
+                                             {
+                                              LOG_WARNING("[ForceSensorCalibration] Calibration motion was interrupted before it's planned duration (" << dt_ << " / " << duration_ << ")");
+                                              interrupted_ = true;
+                                             }
+                                            )
+                         );
 }
 
 
@@ -114,7 +133,7 @@ bool CalibrationMotionLogging::run(mc_control::fsm::Controller & ctl_)
 
 
   dt_ += ctl_.timeStep;
-  if(dt_ > duration_)
+  if(interrupted_ || dt_ > duration_)
   {
     output("OK");
     return true;
@@ -146,6 +165,7 @@ void CalibrationMotionLogging::teardown(mc_control::fsm::Controller & ctl_)
 
   auto postureTask = ctl_.getPostureTask(ctl_.robot().name());
   postureTask->stiffness(savedStiffness_);
+  ctl_.gui()->removeElement({}, "Progress");
 }
 
 EXPORT_SINGLE_STATE("CalibrationMotionLogging", CalibrationMotionLogging)

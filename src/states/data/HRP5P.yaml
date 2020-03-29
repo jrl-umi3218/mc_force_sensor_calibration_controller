@@ -13,7 +13,7 @@ HRP5P::InitialPosture_:
         eval: 0.01
 
 HRP5P::Calibrate_:
-  base: ForceSensorCalibration_Initial
+  base: CalibrationMotionLogging
   outputPath: /tmp/calib-force-sensors
   forceSensors:
   - [LeftHandForceSensor, forceLH]

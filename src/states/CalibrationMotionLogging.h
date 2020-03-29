@@ -25,4 +25,5 @@ private:
     std::vector<std::pair<std::string, std::string>> sensors_;
     std::map<std::string, std::stringstream> loggers_;
     std::string outputPath_ = "/tmp/calib";
+    bool interrupted_ = false;
 };
