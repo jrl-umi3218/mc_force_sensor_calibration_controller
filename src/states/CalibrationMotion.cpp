@@ -9,7 +9,8 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
   auto robotConf = ctl.config()(robot.name());
   if(!robotConf.has("motion"))
   {
-    LOG_ERROR_AND_THROW(std::runtime_error, "Calibration controller expects a joints entry");
+    LOG_ERROR("Calibration controller expects a joints entry");
+    output("FAILURE");
   }
   auto conf = robotConf("motion");
   conf("duration", duration_);
@@ -23,6 +24,9 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
   for(const auto & jConfig : conf("joints"))
   {
     std::string name = jConfig("name");
+    auto percentLimits = percentLimits_;
+    jConfig("percentLimits", percentLimits);
+    mc_filter::utils::clampInPlace(percentLimits, 0, 1);
     double period = jConfig("period");
     auto jidx = robot.jointIndexByName(name);
     auto start = robot.mbc().q[jidx][0];
@@ -31,9 +35,16 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
     auto actualRange = actualUpper - actualLower;
 
     // Reduced range
-    const auto range = percentLimits_ * actualRange;
+    const auto range = percentLimits * actualRange;
     const auto lower = actualLower + (actualRange - range)/2;
     const auto upper = actualUpper - (actualRange - range)/2;
+
+    if(start < lower || start > upper)
+    {
+      LOG_ERROR("[ForceSensorCalibration] Starting joint configuration of joint " << name << " [" << start << "] is outside of the reduced limit range [" << lower << ", " << upper << "] (percentLimits: " << percentLimits << ", actual joint limits: [" << actualLower << ", " << actualUpper << "]");
+      output("FAILURE");
+    }
+
     // compute the starting time such that the joint does not move initially
     // that is such that f(start_dt) = start
     // i.e start_dt = f^(-1)(start)
@@ -74,6 +85,10 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
 bool CalibrationMotion::run(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<ForceSensorCalibration &>(ctl_);
+  if(output() == "FAILURE")
+  {
+    return true;
+  }
 
   // Update all joint positions
   for(auto & updateJoint : jointUpdates_)
