@@ -70,11 +70,26 @@ bool CheckResults::run(mc_control::fsm::Controller & ctl_)
 
 void CheckResults::saveCalibration(mc_control::fsm::Controller & ctl)
 {
+  LOG_INFO("[ForceSensorCalibration] Saving calibration results");
+  const auto &calib_dir = ctl.robot().module().calib_dir;
+  if(!bfs::exists(calib_dir))
+  {
+    if(bfs::create_directories(calib_dir))
+    {
+      LOG_INFO("[ForceSensorCalibration] Created missing calibration directory " << calib_dir);
+    }
+    else
+    {
+      LOG_ERROR("[ForceSensorCalibration] Failed to create calibration directory " << calib_dir);
+      return;
+    }
+  }
+
   for(const auto & sensorP : sensors_)
   {
     const auto & sensor = sensorP.first;
     const auto source_path = "/tmp/calib-force-sensors-result-"+ctl.robot().name() + "/" + std::string("calib_data." + sensor);
-    const auto destination_path = ctl.robot().module().calib_dir + "/" + std::string("calib_data." + sensor);
+    const auto destination_path =  calib_dir + "/" + std::string("calib_data." + sensor);
     try
     {
       bfs::copy_file(source_path,destination_path, bfs::copy_option::overwrite_if_exists);
