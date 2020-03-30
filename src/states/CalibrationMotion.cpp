@@ -1,5 +1,6 @@
 #include "CalibrationMotion.h"
 #include "../ForceSensorCalibration.h"
+#include <mc_filter/utils/clamp.h>
 
 
 void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
@@ -12,6 +13,8 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
   }
   auto conf = robotConf("motion");
   conf("duration", duration_);
+  conf("percentLimits", percentLimits_);
+  mc_filter::utils::clampInPlace(percentLimits_, 0, 1);
 
   auto postureTask = ctl.getPostureTask(robot.name());
   savedStiffness_ = postureTask->stiffness();
@@ -23,8 +26,14 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
     double period = jConfig("period");
     auto jidx = robot.jointIndexByName(name);
     auto start = robot.mbc().q[jidx][0];
-    auto lower = robot.ql()[jidx][0];
-    auto upper = robot.qu()[jidx][0];
+    auto actualLower = robot.ql()[jidx][0];
+    auto actualUpper = robot.qu()[jidx][0];
+    auto actualRange = actualUpper - actualLower;
+
+    // Reduced range
+    const auto range = percentLimits_ * actualRange;
+    const auto lower = actualLower + (actualRange - range)/2;
+    const auto upper = actualUpper - (actualRange - range)/2;
     // compute the starting time such that the joint does not move initially
     // that is such that f(start_dt) = start
     // i.e start_dt = f^(-1)(start)

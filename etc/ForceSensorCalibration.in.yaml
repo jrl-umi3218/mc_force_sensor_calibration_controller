@@ -83,6 +83,7 @@ hrp4:
   motion:
     duration: 30
     stiffness: 10
+    percentLimits: 0.8
     joints:
       # Left wrist
     - name: L_WRIST_P
@@ -137,11 +138,14 @@ hrp5_p:
       LEP: [-1.3]
       REP: [-1.3]
       ## Legs
-      LCR: [0.15]
-      RCR: [-0.15]
+      # LCR: [0.15]
+      # RCR: [-0.15]
   motion:
     duration: 30
     stiffness: 10
+    # XXX WARNING for now with Rafa's soles the joint limits are wrong
+    # Use a conservative value here until this is resolved
+    percentLimits: 0.5
     joints:
       # Left wrist
     - name: LWRR
@@ -158,14 +162,14 @@ hrp5_p:
     - name: RWRY
       period: 15
       ## Legs
-    - name: RAP
-      period: 7
-    - name: RAR
-      period: 10
-    - name: LAP
-      period: 7
-    - name: LAR
-      period: 10
+      # - name: RAP
+      #   period: 7
+      # - name: RAR
+      #   period: 10
+      # - name: LAP
+      #   period: 7
+      # - name: LAR
+      #   period: 10
 
 hrp2_drc:
   forceSensors:
@@ -182,6 +186,7 @@ hrp2_drc:
       RLEG_JOINT1: [-0.2]
       LLEG_JOINT1: [0.2]
   motion:
+    percentLimits: 0.9
     joints:
       # Left wrist
       - name: LARM_JOINT4

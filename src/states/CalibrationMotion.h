@@ -17,6 +17,7 @@ private:
     std::vector<std::function<void()>> jointUpdates_;
     double dt_ = 0;
     double duration_ = 60;
+    double percentLimits_ = 0.8;
     double savedStiffness_ = 10;
     bool interrupted_ = false;
 };

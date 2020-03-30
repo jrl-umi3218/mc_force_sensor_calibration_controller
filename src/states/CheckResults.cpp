@@ -18,6 +18,7 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
     LOG_ERROR_AND_THROW(std::runtime_error, "Calibration controller expects a forceSensors entry");
   }
   sensors_ = robotConf("forceSensors");
+  double duration = robotConf("motion")("duration", 30);
 
   // Load new calibration parameters
   for(const auto & sensorP : sensors_)
@@ -28,7 +29,7 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
     ctl.robot().forceSensor(sensor).loadCalibrator(filename, ctl.robot().mbc().gravity);
 
     ctl.gui()->addPlot(sensor,
-                   plot::X({"t", {t_ + 0, t_ + 60}}, [this]() { return t_; }),
+                   plot::X({"t", {t_ + 0, t_ + duration}}, [this]() { return t_; }),
                    plot::Y("Wrenches calibrated (x)", [this, &robot]() { return robot.forceSensor("RightHandForceSensor").wrenchWithoutGravity(robot).force().x(); }, Color::Red, Style::Solid),
                    plot::Y("Wrenches calibrated (y)", [this, &robot]() { return robot.forceSensor("RightHandForceSensor").wrenchWithoutGravity(robot).force().y(); }, Color::Green, Style::Solid),
                    plot::Y("Wrenches calibrated (y)", [this, &robot]() { return robot.forceSensor("RightHandForceSensor").wrenchWithoutGravity(robot).force().z(); }, Color::Blue, Style::Solid),
@@ -48,12 +49,21 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
              [this, &ctl]()
              {
               saveCalibration(ctl);
+             }),
+      Button("Stop (without saving)",
+             [this]
+             {
+              running_ = false;
              }));
 }
 
 bool CheckResults::run(mc_control::fsm::Controller & ctl_)
 {
-  t_ += ctl_.timeStep;
+  if(running_)
+  {
+    t_ += ctl_.timeStep;
+    return false;
+  }
   output("OK");
   return true;
 }
@@ -64,7 +74,7 @@ void CheckResults::saveCalibration(mc_control::fsm::Controller & ctl)
   {
     const auto & sensor = sensorP.first;
     const auto source_path = "/tmp/calib-force-sensors-result-"+ctl.robot().name() + "/" + std::string("calib_data." + sensor);
-    const auto destination_path = ctl.robot().module().calib_dir + std::string("calib_data." + sensor);
+    const auto destination_path = ctl.robot().module().calib_dir + "/" + std::string("calib_data." + sensor);
     try
     {
       bfs::copy_file(source_path,destination_path, bfs::copy_option::overwrite_if_exists);

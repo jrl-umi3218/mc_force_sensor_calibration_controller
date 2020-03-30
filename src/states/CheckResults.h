@@ -18,4 +18,5 @@ struct CheckResults : mc_control::fsm::State
  private:
     double t_ = 0;
     std::vector<std::pair<std::string, std::string>> sensors_;
+    bool running_ = true;
 };
