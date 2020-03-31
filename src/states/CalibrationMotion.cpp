@@ -71,7 +71,7 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
                                                    },
                                                    0,
                                                    duration_),
-                         mc_rtc::gui::Button("Stop",
+                         mc_rtc::gui::Button("Stop Motion",
                                              [this]()
                                              {
                                               LOG_WARNING("[ForceSensorCalibration] Motion was interrupted before it's planned duration (" << dt_ << " / " << duration_ << ")");
@@ -96,11 +96,14 @@ bool CalibrationMotion::run(mc_control::fsm::Controller & ctl_)
     updateJoint();
   }
 
-  dt_ += ctl_.timeStep;
   if(interrupted_ || dt_ > duration_)
   {
     output("OK");
     return true;
+  }
+  else
+  {
+    dt_ += ctl_.timeStep;
   }
   return false;
 }
@@ -112,7 +115,7 @@ void CalibrationMotion::teardown(mc_control::fsm::Controller & ctl_)
   auto postureTask = ctl_.getPostureTask(ctl_.robot().name());
   postureTask->stiffness(savedStiffness_);
   ctl_.gui()->removeElement({}, "Progress");
-  ctl_.gui()->removeElement({}, "Stop");
+  ctl_.gui()->removeElement({}, "Stop Motion");
 }
 
 EXPORT_SINGLE_STATE("CalibrationMotion", CalibrationMotion)

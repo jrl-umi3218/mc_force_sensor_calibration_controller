@@ -5,6 +5,10 @@
 
 namespace bfs = boost::filesystem;
 
+void CheckResults::configure(const mc_rtc::Configuration & config)
+{
+  config("checkDefault", checkDefault_);
+}
 
 void CheckResults::start(mc_control::fsm::Controller & ctl)
 {
@@ -20,11 +24,21 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
   sensors_ = robotConf("forceSensors");
   double duration = robotConf("motion")("duration", 30);
 
+  std::string calib_path = "";
+  if(checkDefault_)
+  {
+    calib_path = "/tmp/calib-force-sensors-result-"+ctl.robot().name();
+  }
+  else
+  {
+    calib_path = ctl.robot().module().calib_dir;
+  }
+
   // Load new calibration parameters
   for(const auto & sensorP : sensors_)
   {
     auto sensor = sensorP.first;
-    const auto filename = "/tmp/calib-force-sensors-result-"+ctl.robot().name()+"/calib_data."+sensor;
+    const auto filename = calib_path+"/calib_data."+sensor;
     LOG_INFO("[ForceSensorCalibration] Loading calibration file " << filename);
     ctl.robot().forceSensor(sensor).loadCalibrator(filename, ctl.robot().mbc().gravity);
 
@@ -50,11 +64,18 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
              {
               saveCalibration(ctl);
              }),
-      Button("Stop (without saving)",
-             [this]
+      Button("Finish without saving",
+             [this]()
              {
               running_ = false;
+             }),
+      Button("Save and finish",
+             [this, &ctl]()
+             {
+              saveCalibration(ctl);
+              running_ = false;
              }));
+
 }
 
 bool CheckResults::run(mc_control::fsm::Controller & ctl_)
@@ -111,6 +132,8 @@ void CheckResults::teardown(mc_control::fsm::Controller & ctl)
     ctl.gui()->removePlot(sensor);
     ctl.gui()->removeElement({}, "Status");
     ctl.gui()->removeElement({}, "Save calibration");
+    ctl.gui()->removeElement({}, "Finish without saving");
+    ctl.gui()->removeElement({}, "Save and finish");
   }
 }
 

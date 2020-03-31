@@ -47,18 +47,54 @@ states:
 
   CheckCalibration:
     base: Parallel
-    states: [CalibrationMotion, CheckResults]
+    states: [CheckResults, CalibrationMotion]
+
+  GoHalfSitting:
+    base: HalfSitting
+    eval: 0.1
+
+  Calibration::Choice:
+    base: ChooseTransition
+    category: ["Calibration"]
+    transitions:
+    - [Start calibration, Calibrate]
+    - [Check calibration, Check]
+    - [Show forces, ShowForces]
+
+  Calibration::FSM::Calibrate:
+    base: Meta
+    transitions:
+    - [InitialPosture, OK, Calibrate, Auto]
+    - [Calibrate, OK, RunCalibrationScript, Auto]
+    - [Calibrate, FAILURE, HalfSitting, Auto]
+    - [RunCalibrationScript, SUCCESS, CheckCalibration, Auto]
+    - [RunCalibrationScript, FAILED, GoHalfSitting, Auto]
+    - [CheckCalibration, OK, GoHalfSitting, Auto]
+
+  Calibration::FSM::Check:
+    base: Meta
+    transitions:
+    - [InitialPosture, OK, CheckCalibration, Auto]
+    - [CheckCalibration, OK, GoHalfSitting, Auto]
+    configs:
+      CheckCalibration:
+        checkDefault: true
+
+  Calibration::FSM::ShowForces:
+    base: ShowForces
 
 # Transitions map
 transitions:
-- [InitialPosture, OK, Calibrate, Auto]
-- [Calibrate, OK, RunCalibrationScript, Auto]
-- [Calibrate, FAILURE, HalfSitting, Auto]
-- [RunCalibrationScript, SUCCESS, CheckCalibration, Auto]
-- [RunCalibrationScript, FAILED, HalfSitting, Auto]
-- [CheckCalibration, OK, HalfSitting, Auto]
+  # Choose what to do
+- [Calibration::Choice, Calibrate, Calibration::FSM::Calibrate]
+- [Calibration::Choice, Check, Calibration::FSM::Check]
+- [Calibration::Choice, ShowForces, Calibration::FSM::ShowForces]
+  # Go back to choice
+- [Calibration::FSM::Calibrate, OK, Calibration::Choice, Auto]
+- [Calibration::FSM::ShowForces, OK, Calibration::Choice, Strict]
+- [Calibration::FSM::Check, OK, Calibration::Choice, Auto]
 # Initial state
-init: InitialPosture
+init: Calibration::Choice
 
 plots: false
 hrp4:

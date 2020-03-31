@@ -2,9 +2,16 @@
 
 #include <mc_control/fsm/State.h>
 
-struct CheckResults : mc_control::fsm::State
+namespace mc_control
 {
+  namespace fsm
+  {
+    struct Controller;
+  } /* fsm */
+} /* mc_control */
 
+struct ChooseTransition : mc_control::fsm::State
+{
     void configure(const mc_rtc::Configuration & config) override;
 
     void start(mc_control::fsm::Controller & ctl) override;
@@ -12,12 +19,7 @@ struct CheckResults : mc_control::fsm::State
     bool run(mc_control::fsm::Controller & ctl) override;
 
     void teardown(mc_control::fsm::Controller & ctl) override;
-
-    void saveCalibration(mc_control::fsm::Controller & ctl);
-
  private:
-    double t_ = 0;
-    std::vector<std::pair<std::string, std::string>> sensors_;
-    bool running_ = true;
-    bool checkDefault_ = false;
+    std::map<std::string, std::string> actions_;
+    std::vector<std::string> category_ = {"ChooseTransition"};
 };
