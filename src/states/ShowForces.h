@@ -39,8 +39,9 @@ struct ShowForces : mc_control::fsm::State
 
     void addWrenchPlot(const std::string & name, mc_rtc::gui::StateBuilder & gui, const mc_rbdyn::ForceSensor & fs);
     void addWrenchWithoutGravityPlot(const std::string & name, mc_rtc::gui::StateBuilder & gui, const mc_rbdyn::Robot & robot, const mc_rbdyn::ForceSensor & fs);
+    void addWrenchWithoutGravityPlot(const std::string & name, const std::string & surface, mc_rtc::gui::StateBuilder & gui, const mc_rbdyn::Robot & robot, const mc_rbdyn::ForceSensor & fs);
+
     void addWrenchVector(const std::string & name, mc_rtc::gui::StateBuilder & gui, const mc_rbdyn::Robot & robot, const mc_rbdyn::ForceSensor & fs);
-    void addWrenchVector(const std::string & name, const std::string & surface, mc_rtc::gui::StateBuilder & gui, const mc_rbdyn::Robot & robot, const mc_rbdyn::ForceSensor & fs);
     void addWrenchWithoutGravityVector(const std::string & name, mc_rtc::gui::StateBuilder & gui, const mc_rbdyn::Robot & robot, const mc_rbdyn::ForceSensor & fs);
     void addWrenchWithoutGravityVector(const std::string & name, const std::string & surface, mc_rtc::gui::StateBuilder & gui, const mc_rbdyn::Robot & robot, const mc_rbdyn::ForceSensor & fs);
  private:
@@ -50,4 +51,6 @@ struct ShowForces : mc_control::fsm::State
 
     std::vector<std::string> category_;
     std::vector<std::string> plots_;
+    // Map of force sensor to surface name (chosen in the gui)
+    std::map<std::string, std::string> surfaces_;
 };
