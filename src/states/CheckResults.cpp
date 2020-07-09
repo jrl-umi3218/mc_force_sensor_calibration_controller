@@ -27,11 +27,11 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
   std::string calib_path = "";
   if(checkDefault_)
   {
-    calib_path = "/tmp/calib-force-sensors-result-"+ctl.robot().name();
+    calib_path = ctl.robot().module().calib_dir;
   }
   else
   {
-    calib_path = ctl.robot().module().calib_dir;
+    calib_path = "/tmp/calib-force-sensors-result-"+ctl.robot().name();
   }
 
   // Load new calibration parameters
@@ -44,12 +44,12 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
 
     ctl.gui()->addPlot(sensor,
                    plot::X({"t", {t_ + 0, t_ + duration}}, [this]() { return t_; }),
-                   plot::Y("Wrenches calibrated (x)", [this, &robot]() { return robot.forceSensor("RightHandForceSensor").wrenchWithoutGravity(robot).force().x(); }, Color::Red, Style::Solid),
-                   plot::Y("Wrenches calibrated (y)", [this, &robot]() { return robot.forceSensor("RightHandForceSensor").wrenchWithoutGravity(robot).force().y(); }, Color::Green, Style::Solid),
-                   plot::Y("Wrenches calibrated (y)", [this, &robot]() { return robot.forceSensor("RightHandForceSensor").wrenchWithoutGravity(robot).force().z(); }, Color::Blue, Style::Solid),
-                   plot::Y("Wrenches raw(x)", [this, &robot]() { return robot.forceSensor("RightHandForceSensor").wrench().force().x(); }, Color::Red, Style::Dashed),
-                   plot::Y("Wrenches raw(y)", [this, &robot]() { return robot.forceSensor("RightHandForceSensor").wrench().force().y(); }, Color::Green, Style::Dashed),
-                   plot::Y("Wrenches raw(z)", [this, &robot]() { return robot.forceSensor("RightHandForceSensor").wrench().force().z(); }, Color::Blue, Style::Dashed)
+                   plot::Y("Wrenches calibrated (x)", [&robot,sensor]() { return robot.forceSensor(sensor).wrenchWithoutGravity(robot).force().x(); }, Color::Red, Style::Solid),
+                   plot::Y("Wrenches calibrated (y)", [&robot,sensor]() { return robot.forceSensor(sensor).wrenchWithoutGravity(robot).force().y(); }, Color::Green, Style::Solid),
+                   plot::Y("Wrenches calibrated (y)", [&robot,sensor]() { return robot.forceSensor(sensor).wrenchWithoutGravity(robot).force().z(); }, Color::Blue, Style::Solid),
+                   plot::Y("Wrenches raw(x)", [&robot,sensor]() { return robot.forceSensor(sensor).wrench().force().x(); }, Color::Red, Style::Dashed),
+                   plot::Y("Wrenches raw(y)", [&robot,sensor]() { return robot.forceSensor(sensor).wrench().force().y(); }, Color::Green, Style::Dashed),
+                   plot::Y("Wrenches raw(z)", [&robot,sensor]() { return robot.forceSensor(sensor).wrench().force().z(); }, Color::Blue, Style::Dashed)
                    );
   }
 

@@ -74,7 +74,9 @@ states:
     - [CheckCalibration, OK, GoHalfSitting, Auto]
     configs:
       CheckCalibration:
-        checkDefault: true
+        configs:
+          CheckResults:
+            checkDefault: true
 
   Calibration::FSM::ShowForces:
     base: ShowForces
