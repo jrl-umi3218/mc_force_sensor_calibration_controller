@@ -253,3 +253,37 @@ hrp2_drc:
         period: 12
     duration: 30
     stiffness: 10
+
+panda_default:
+  forceSensors:
+  - [LeftHandForceSensor, forceLH]
+  initial_posture:
+    completion:
+      eval: 0.05
+    target:
+      panda_jointA1: [0.0]
+      panda_jointA2: [0.0]
+      panda_jointA3: [0.0]
+      panda_jointA4: [-2.0]
+      panda_jointA5: [0.0]
+      panda_jointA6: [2.0]
+      panda_jointA7: [0.0]
+  motion:
+    duration: 30
+    stiffness: 10
+    percentLimits: 0.8
+    joints:
+    - name: panda_jointA1
+      period: 10
+    - name: panda_jointA2
+      period: 10
+    - name: panda_jointA3
+      period: 10
+    - name: panda_jointA4
+      period: 10
+    - name: panda_jointA5
+      period: 10
+    - name: panda_jointA6
+      period: 10
+    - name: panda_jointA7
+      period: 10
