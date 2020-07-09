@@ -1,6 +1,11 @@
 Force Sensor Calibration
 ==
 
+Requirements
+==
+
+Running this controller require to install the [Ceres library](https://github.com/ceres-solver/ceres-solver)
+
 **IMPORTANT WARNING: This controller must be run with the robot in the air as it'll move the feet around**
 
 This controller allows to calibrate the force sensors of HRP robots to remove the effect of gravity due to links attached to the force sensors (grippers/feet).

@@ -1,9 +1,16 @@
 #include "RunCalibrationScript.h"
-#include "../ForceSensorCalibration.h"
-#include "../../build/src/config.h"
+
 #include <mc_rbdyn/rpy_utils.h>
 #include <mc_rtc/io_utils.h>
+
 #include <boost/filesystem.hpp>
+namespace bfs = boost::filesystem;
+
+#include "../ForceSensorCalibration.h"
+#include "../calibrate.h"
+
+//FIXME DIRTY
+#include "../../build/src/config.h"
 
 RunCalibrationScript::~RunCalibrationScript()
 {
@@ -16,28 +23,50 @@ void RunCalibrationScript::configure(const mc_rtc::Configuration &)
 
 void RunCalibrationScript::start(mc_control::fsm::Controller & ctl_)
 {
+  auto & robot = ctl_.robot();
+  auto robotConf = ctl_.config()(robot.name());
   outputPath_ = "/tmp/calib-force-sensors-result-" + ctl_.robot().name();
-  std::string moduleName = ctl_.config()("MainRobot");
-  std::string robotName = ctl_.robot().name();
-  bool showPlots = ctl_.config()("plots", false);
-
-  th_ = std::thread(
-      [this, showPlots, robotName, moduleName]()
+  sensors_ = robotConf("forceSensors");
+  auto & measurements = ctl_.datastore().get<SensorMeasurements>("measurements");
+  th_ = std::thread([&,this]() {
+    for(const auto & s : sensors_)
+    {
+      mc_rtc::log::info("Start calibration optimization for {}", s.first);
+      auto result = calibrate(ctl_.robot(), s.first, measurements.at(s.first));
+      success_ = result.success && success_;
+      if(result.success)
       {
-        std::string plots = showPlots ? " --show-plots " : "";
-        std::string command = std::string(calib_config::CALIBRATION_SCRIPT_EXECUTABLE) + plots + " --robot " + moduleName + " --dry-run /tmp/calib-force-sensors-data-"+robotName+" --dry-run-path " + outputPath_ + " all";
-        mc_rtc::log::info("Executing calibration script: {}", command);
-        auto result = std::system(command.c_str());
-        success_ = (result == 0);
-        completed_ = true;
-      });
-  ctl_.gui()->addElement({},
-                         mc_rtc::gui::Label("Status",
-                                            []()
-                                            {
-                                            return "Calibration script running, this may take several minutes";
-                                            })
-                         );
+        mc_rtc::log::success("Calibration succeeded for {}", s.first);
+        bfs::path out(outputPath_);
+        out += "calib_data." + s.first;
+        std::ofstream ofs(out.string());
+        if(!ofs.good())
+        {
+          mc_rtc::log::error("Could not write temporary calibration file to {}", out.string());
+          continue;
+        }
+        ofs << result.mass << "\n";
+        ofs << result.rpy[0] << "\n";
+        ofs << result.rpy[1] << "\n";
+        ofs << result.rpy[2] << "\n";
+        ofs << result.com[0] << "\n";
+        ofs << result.com[1] << "\n";
+        ofs << result.com[2] << "\n";
+        ofs << result.offset[0] << "\n";
+        ofs << result.offset[1] << "\n";
+        ofs << result.offset[2] << "\n";
+        ofs << result.offset[3] << "\n";
+        ofs << result.offset[4] << "\n";
+        ofs << result.offset[5];
+        mc_rtc::log::info("Wrote temporary calibration file to {}", out.string());
+      }
+      else
+      {
+        mc_rtc::log::error("Calibration failed for {}", s.first);
+      }
+    }
+    completed_ = true;
+  });
 }
 
 
