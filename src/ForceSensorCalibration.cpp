@@ -1,5 +1,7 @@
 #include "ForceSensorCalibration.h"
 
+#include <mc_rbdyn/configuration_io.h>
+
 ForceSensorCalibration::ForceSensorCalibration(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config)
 : mc_control::fsm::Controller(rm, dt, config)
 {
@@ -18,6 +20,10 @@ bool ForceSensorCalibration::run()
 void ForceSensorCalibration::reset(const mc_control::ControllerResetData & reset_data)
 {
   mc_control::fsm::Controller::reset(reset_data);
+  if(config()(robot().name()).has("collisions"))
+  {
+    addCollisions(robot().name(), "ground", config()(robot().name())("collisions"));
+  }
 }
 
 
