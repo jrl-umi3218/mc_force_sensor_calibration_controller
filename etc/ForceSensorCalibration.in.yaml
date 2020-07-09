@@ -32,6 +32,15 @@ constraints:
 collisions:
 - type: collision
   useMinimal: true
+- type: collision
+  r1: panda_default
+  r2: ground
+  collisions:
+    - body1: panda_linkA7
+      body2: ground
+      iDist: 0.5
+      sDist: 0.02
+      damping: 0.0
 # Initial set of contacts
 contacts: []
 
