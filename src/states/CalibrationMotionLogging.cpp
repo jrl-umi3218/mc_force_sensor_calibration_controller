@@ -9,7 +9,7 @@ std::string to_string(const Eigen::MatrixBase<Derived>& v, const std::string & d
 {
   if(v.cols() > 1)
   {
-    LOG_ERROR_AND_THROW(std::runtime_error, "to_string on Eigen types expect a vector, got a matrix of size " << v.rows() << "x" << v.cols());
+    mc_rtc::log::error_and_throw<std::runtime_error>("to_string on Eigen types expect a vector, got a matrix of size {}x{}", v.rows(), v.cols());
   }
   if(v.rows() == 0)
   {
@@ -33,7 +33,7 @@ void CalibrationMotionLogging::start(mc_control::fsm::Controller & ctl_)
 
   if(!robotConf.has("forceSensors"))
   {
-    LOG_ERROR_AND_THROW(std::runtime_error, "Calibration controller expects a forceSensors entry");
+    mc_rtc::log::error_and_throw<std::runtime_error>("Calibration controller expects a forceSensors entry");
   }
   sensors_ = robotConf("forceSensors");
   outputPath_ = "/tmp/calib-force-sensors-data-" + robot.name();
@@ -43,7 +43,7 @@ void CalibrationMotionLogging::start(mc_control::fsm::Controller & ctl_)
   {
     if(!boost::filesystem::create_directory(outputPath_))
     {
-      LOG_ERROR_AND_THROW(std::runtime_error, "[CalibrationMotionLogging] Could not create output folder " << outputPath_);
+      mc_rtc::log::error_and_throw<std::runtime_error>("[CalibrationMotionLogging] Could not create output folder {}", outputPath_);
     }
   }
 }
@@ -74,11 +74,9 @@ bool CalibrationMotionLogging::run(mc_control::fsm::Controller & ctl_)
   return true;
 }
 
-void CalibrationMotionLogging::teardown(mc_control::fsm::Controller & ctl_)
+void CalibrationMotionLogging::teardown(mc_control::fsm::Controller &)
 {
-  auto & ctl = static_cast<ForceSensorCalibration &>(ctl_);
-
-  LOG_INFO("[CalibrationMotionLogging] Saving calibration data to " << outputPath_);
+  mc_rtc::log::info("[CalibrationMotionLogging] Saving calibration data to {}");
   // Save all logger's output to file
   for(const auto & logger : loggers_)
   {
@@ -88,11 +86,11 @@ void CalibrationMotionLogging::teardown(mc_control::fsm::Controller & ctl_)
     {
       file << logger.second.str();
       file.close();
-      LOG_INFO("[CalibrationMotionLogging] Calibration file " << filename << " written successfully.");
+      mc_rtc::log::info("[CalibrationMotionLogging] Calibration file {} written successfully.", filename);
     }
     else
     {
-      LOG_ERROR("Could not write logging information for " << logger.first << " to file: " << filename);
+      mc_rtc::log::error("Could not write logging information for {} to file {}", logger.first, filename);
     }
   }
 }

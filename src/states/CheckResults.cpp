@@ -19,7 +19,7 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
   const auto & robotConf = ctl.config()(robot.name());
   if(!robotConf.has("forceSensors"))
   {
-    LOG_ERROR_AND_THROW(std::runtime_error, "Calibration controller expects a forceSensors entry");
+    mc_rtc::log::error_and_throw<std::runtime_error>("Calibration controller expects a forceSensors entry");
   }
   sensors_ = robotConf("forceSensors");
   double duration = robotConf("motion")("duration", 30);
@@ -39,7 +39,7 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
   {
     auto sensor = sensorP.first;
     const auto filename = calib_path+"/calib_data."+sensor;
-    LOG_INFO("[ForceSensorCalibration] Loading calibration file " << filename);
+    mc_rtc::log::info("[ForceSensorCalibration] Loading calibration file {}", filename);
     ctl.robot().forceSensor(sensor).loadCalibrator(filename, ctl.robot().mbc().gravity);
 
     ctl.gui()->addPlot(sensor,
@@ -91,17 +91,17 @@ bool CheckResults::run(mc_control::fsm::Controller & ctl_)
 
 void CheckResults::saveCalibration(mc_control::fsm::Controller & ctl)
 {
-  LOG_INFO("[ForceSensorCalibration] Saving calibration results");
+  mc_rtc::log::info("[ForceSensorCalibration] Saving calibration results");
   const auto &calib_dir = ctl.robot().module().calib_dir;
   if(!bfs::exists(calib_dir))
   {
     if(bfs::create_directories(calib_dir))
     {
-      LOG_INFO("[ForceSensorCalibration] Created missing calibration directory " << calib_dir);
+      mc_rtc::log::info("[ForceSensorCalibration] Created missing calibration directory {}", calib_dir);
     }
     else
     {
-      LOG_ERROR("[ForceSensorCalibration] Failed to create calibration directory " << calib_dir);
+      mc_rtc::log::error("[ForceSensorCalibration] Failed to create calibration directory {}", calib_dir);
       return;
     }
   }
@@ -114,11 +114,11 @@ void CheckResults::saveCalibration(mc_control::fsm::Controller & ctl)
     try
     {
       bfs::copy_file(source_path,destination_path, bfs::copy_option::overwrite_if_exists);
-      LOG_SUCCESS("[ForceSensorCalibration] Calibration file copied to " << destination_path);
+      mc_rtc::log::success("[ForceSensorCalibration] Calibration file copied to {}", destination_path);
     }
     catch(...)
     {
-      LOG_WARNING("[ForceSensorCalibration] Failed to save " << sensor << " calibration file to " << destination_path);
+      mc_rtc::log::warning("[ForceSensorCalibration] Failed to save {} calibration file to {}", sensor, destination_path);
     }
   }
 }

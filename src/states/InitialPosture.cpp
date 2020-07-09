@@ -9,7 +9,7 @@ void InitialPosture::start(mc_control::fsm::Controller & ctl)
   const auto & robotConf = ctl.config()(ctl.robot().name());
   if(!robotConf.has("initial_posture"))
   {
-    LOG_ERROR_AND_THROW(std::runtime_error, "Calibration controller expects an initial_posture entry");
+    mc_rtc::log::error_and_throw<std::runtime_error>("Calibration controller expects an initial_posture entry");
   }
   const auto & conf(robotConf("initial_posture"));
   auto postureTask = ctl.getPostureTask(ctl.robot().name());

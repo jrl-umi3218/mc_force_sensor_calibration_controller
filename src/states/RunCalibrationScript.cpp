@@ -10,7 +10,7 @@ RunCalibrationScript::~RunCalibrationScript()
   th_.join();
 }
 
-void RunCalibrationScript::configure(const mc_rtc::Configuration & config)
+void RunCalibrationScript::configure(const mc_rtc::Configuration &)
 {
 }
 
@@ -26,7 +26,7 @@ void RunCalibrationScript::start(mc_control::fsm::Controller & ctl_)
       {
         std::string plots = showPlots ? " --show-plots " : "";
         std::string command = std::string(calib_config::CALIBRATION_SCRIPT_EXECUTABLE) + plots + " --robot " + moduleName + " --dry-run /tmp/calib-force-sensors-data-"+robotName+" --dry-run-path " + outputPath_ + " all";
-        LOG_INFO("Executing calibration script: " << command);
+        mc_rtc::log::info("Executing calibration script: {}", command);
         auto result = std::system(command.c_str());
         success_ = (result == 0);
         completed_ = true;
@@ -41,19 +41,17 @@ void RunCalibrationScript::start(mc_control::fsm::Controller & ctl_)
 }
 
 
-bool RunCalibrationScript::run(mc_control::fsm::Controller & ctl_)
+bool RunCalibrationScript::run(mc_control::fsm::Controller &)
 {
-  auto & ctl = static_cast<ForceSensorCalibration &>(ctl_);
-
   if(completed_)
   {
     if(!success_)
     {
-      LOG_ERROR("[ForceSensor] Calibration script failed");
+      mc_rtc::log::error("[ForceSensor] Calibration script failed");
       output("FAILED");
       return true;
     }
-    LOG_INFO("[ForceSensorCalibration] Calibration files written to " << outputPath_);
+    mc_rtc::log::info("[ForceSensorCalibration] Calibration files written to {}", outputPath_);
     output("SUCCESS");
     return true;
   }

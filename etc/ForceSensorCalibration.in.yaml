@@ -26,18 +26,14 @@ robots:
 constraints:
 - type: contact
 - type: kinematics
-  robotIndex: 0
   damper: [0.1, 0.01, 0.5]
 - type: compoundJoint
-  robotIndex: 0
 # Collision constraint
 collisions:
 - type: collision
-  r1Index: 0
-  r2Index: 0
   useMinimal: true
 # Initial set of contacts
-contacts: {}
+contacts: []
 
 # Implement some additional text states
 states:

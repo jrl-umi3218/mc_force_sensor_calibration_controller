@@ -173,7 +173,7 @@ void ShowForces::start(mc_control::fsm::Controller & ctl)
                                                         },
                                                         [this, name](const std::string & surface)
                                                         {
-                                                          LOG_INFO("[ShowForces] Surface " << surface << " selected");
+                                                          mc_rtc::log::info("[ShowForces] Surface {} selected", surface);
                                                           surfaces_[name] = surface;
                                                         }));
 //mc  _rtc::gui::FormDataComboInput{"R0 surface", false, {"surfaces", "$R0"}},

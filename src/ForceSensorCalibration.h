@@ -13,11 +13,6 @@ struct ForceSensorCalibration_DLLAPI ForceSensorCalibration : public mc_control:
 
     void reset(const mc_control::ControllerResetData & reset_data) override;
 
-    std::vector<std::string> supported_robots() const override
-    {
-      return {"hrp5_p", "hrp2_drc", "hrp4"};
-    }
-
 private:
     mc_rtc::Configuration config_;
 };
