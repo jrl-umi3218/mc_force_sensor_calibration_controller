@@ -52,10 +52,10 @@ states:
   Calibration::Choice:
     base: ChooseTransition
     category: ["Calibration"]
-    transitions:
-    - [Start calibration, Calibrate]
-    - [Check calibration, Check]
-    - [Show forces, ShowForces]
+    actions:
+      Start calibration: Calibrate
+      Check calibration: Check
+      Show forces: ShowForces
 
   Calibration::FSM::Calibrate:
     base: Meta
@@ -82,9 +82,9 @@ states:
 # Transitions map
 transitions:
   # Choose what to do
-- [Calibration::Choice, Calibrate, Calibration::FSM::Calibrate]
-- [Calibration::Choice, Check, Calibration::FSM::Check]
-- [Calibration::Choice, ShowForces, Calibration::FSM::ShowForces]
+- [Calibration::Choice, Calibrate, Calibration::FSM::Calibrate, Auto]
+- [Calibration::Choice, Check, Calibration::FSM::Check, Auto]
+- [Calibration::Choice, ShowForces, Calibration::FSM::ShowForces, Auto]
   # Go back to choice
 - [Calibration::FSM::Calibrate, OK, Calibration::Choice, Auto]
 - [Calibration::FSM::ShowForces, OK, Calibration::Choice, Strict]
