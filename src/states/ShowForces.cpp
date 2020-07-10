@@ -153,7 +153,7 @@ void ShowForces::start(mc_control::fsm::Controller & ctl)
     {
       try
       {
-        const auto & fs = robot.findBodyForceSensor(surface.second->bodyName());
+        const auto & fs = robot.indirectBodyForceSensor(surface.second->bodyName());
         if(fs.name() == name)
         {
           surfaces.push_back(surface.first);

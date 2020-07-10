@@ -26,6 +26,16 @@ void RunCalibrationScript::start(mc_control::fsm::Controller & ctl_)
   auto & robot = ctl_.robot();
   auto robotConf = ctl_.config()(robot.name());
   outputPath_ = "/tmp/calib-force-sensors-result-" + ctl_.robot().name();
+
+  // Attempt to create the output folder
+  if(!boost::filesystem::exists(outputPath_))
+  {
+    if(!boost::filesystem::create_directory(outputPath_))
+    {
+      mc_rtc::log::error_and_throw<std::runtime_error>("[{}] Could not create output folder {}", name(), outputPath_);
+    }
+  }
+
   sensors_ = robotConf("forceSensors");
   auto & measurements = ctl_.datastore().get<SensorMeasurements>("measurements");
   th_ = std::thread([&,this]() {
@@ -38,7 +48,7 @@ void RunCalibrationScript::start(mc_control::fsm::Controller & ctl_)
       {
         mc_rtc::log::success("Calibration succeeded for {}", s.first);
         bfs::path out(outputPath_);
-        out += "calib_data." + s.first;
+        out += "/calib_data." + s.first;
         std::ofstream ofs(out.string());
         if(!ofs.good())
         {
@@ -57,7 +67,7 @@ void RunCalibrationScript::start(mc_control::fsm::Controller & ctl_)
         ofs << result.offset[2] << "\n";
         ofs << result.offset[3] << "\n";
         ofs << result.offset[4] << "\n";
-        ofs << result.offset[5];
+        ofs << result.offset[5] << "\n";
         mc_rtc::log::info("Wrote temporary calibration file to {}", out.string());
       }
       else
