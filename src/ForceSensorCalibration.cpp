@@ -2,6 +2,30 @@
 
 #include <mc_rbdyn/configuration_io.h>
 
+namespace
+{
+
+mc_rtc::Configuration patchConfig(const mc_rbdyn::RobotModule & rm, const mc_rtc::Configuration & config)
+{
+  auto out = config;
+  if(!config.has(rm.name))
+  {
+    return out;
+  }
+  auto rConfig = config(rm.name);
+  if(rConfig.has("RunObservers"))
+  {
+    out.add("RunObservers", rConfig("RunObservers"));
+  }
+  if(rConfig.has("UpdateObservers"))
+  {
+    out.add("UpdateObservers", rConfig("UpdateObservers"));
+  }
+  return out;
+}
+
+}
+
 ForceSensorCalibration::ForceSensorCalibration(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config)
 : mc_control::fsm::Controller(rm, dt, config)
 {
