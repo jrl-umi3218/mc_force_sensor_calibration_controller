@@ -40,6 +40,8 @@ void CalibrationMotionLogging::start(mc_control::fsm::Controller & ctl_)
   for(const auto & s : sensors_)
   {
     measurements[s.first] = {};
+    const auto & sensor = ctl_.robot().forceSensor(s.first);
+    jacobians_[s.first] = {ctl_.robot(), sensor.parentBody()};
   }
 }
 
@@ -54,7 +56,13 @@ bool CalibrationMotionLogging::run(mc_control::fsm::Controller & ctl_)
     const auto & sensor = robot.forceSensor(s.first);
     const auto & X_0_p = real.bodyPosW()[real.bodyIndexByName(sensor.parentBody())];
     const auto & measure = sensor.wrench();
-    measurements[s.first].push_back({X_0_p, measure});
+    auto & j = jacobians_[s.first];
+    const auto & jacMat = j.jacobian.jacobian(robot.mb(), robot.mbc());
+    j.svd.compute(jacMat);
+    if(j.svd.singularValues().tail(1)(0) > 0.08)
+    {
+      measurements[s.first].push_back({X_0_p, measure});
+    }
   }
   output("OK");
   return true;
