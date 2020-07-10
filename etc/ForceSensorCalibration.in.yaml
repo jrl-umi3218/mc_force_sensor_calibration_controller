@@ -1,7 +1,7 @@
 ---
-# Default observer setup for floating-based robots
-RunObservers: [Encoder, BodySensor]
-UpdateObservers: [Encoder, BodySensor]
+# Default observer setup for fixed-base robots
+RunObservers: [Encoder]
+UpdateObservers: [Encoder]
 # If true, the FSM transitions are managed by an external tool
 Managed: false
 # If true and the FSM is self-managed, transitions should be triggered
@@ -309,5 +309,3 @@ panda_default:
     iDist: 0.7
     sDist: 0.04
     damping: 0.0
-  RunObservers: [Encoder]
-  UpdateObservers: [Encoder]
