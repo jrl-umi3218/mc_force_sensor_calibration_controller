@@ -99,6 +99,8 @@ init: Calibration::Choice
 
 plots: false
 hrp4:
+  RunObservers: [Encoder, BodySensor]
+  UpdateObservers: [Encoder, BodySensor]
   forceSensors:
   - [LeftHandForceSensor, forceLH]
   - [RightHandForceSensor, forceRH]
@@ -162,6 +164,8 @@ hrp4:
       period: 15
 
 hrp5_p:
+  RunObservers: [Encoder, BodySensor]
+  UpdateObservers: [Encoder, BodySensor]
   forceSensors:
   - [LeftHandForceSensor, forceLH]
   - [RightHandForceSensor, forceRH]
@@ -216,6 +220,8 @@ hrp5_p:
       percentLimits: 0.5
 
 hrp2_drc:
+  RunObservers: [Encoder, BodySensor]
+  UpdateObservers: [Encoder, BodySensor]
   forceSensors:
   - [LeftHandForceSensor, forceLH]
   - [RightHandForceSensor, forceRH]

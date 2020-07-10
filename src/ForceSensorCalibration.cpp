@@ -1,6 +1,7 @@
 #include "ForceSensorCalibration.h"
 
 #include <mc_rbdyn/configuration_io.h>
+#include <mc_rtc/io_utils.h>
 
 namespace
 {
@@ -51,3 +52,38 @@ void ForceSensorCalibration::reset(const mc_control::ControllerResetData & reset
 }
 
 
+bool ForceSensorCalibration::resetObservers()
+{
+  // Change the list of observers if specified per-robot
+  const auto & rConf = config()(robot().name());
+  auto runObservers = rConf("RunObservers", std::vector<std::string>{});
+  auto updateObservers = rConf("UpdateObservers", std::vector<std::string>{});
+  if(runObservers.empty())
+  {
+    mc_rtc::log::info("[ForceSensorCalibration] No custom observer pipeline specified for robot {}, using the default pipeline.", robot().name());
+  }
+  else
+  {
+    mc_rtc::log::info("[ForceSensorCalibration] Custom pipeline specified for robot {}", robot().name());
+    pipelineObservers_.clear();
+    for(const auto & observerName : runObservers)
+    {
+      auto observerIt = std::find_if(observers_.begin(), observers_.end(), [&observerName](const mc_observers::ObserverPtr & obs)
+                                  {
+                                  return obs->name() == observerName;
+                                  });
+      if(observerIt != observers_.end())
+      {
+        bool update = std::find(updateObservers.begin(), updateObservers.end(), observerName) != updateObservers.end();
+        pipelineObservers_.emplace_back(*observerIt, update);
+      }
+      else
+      {
+        mc_rtc::log::error_and_throw<std::runtime_error>("[ForceSensorCalibration] Requested observer {} but this observer hasn't been loaded (loaded observers are [{}]",
+                                                         observerName,
+                                                         mc_rtc::io::to_string(observers_, [](const auto & obs) { return obs->name(); }));
+      }
+    }
+  }
+  return MCController::resetObservers();
+}
