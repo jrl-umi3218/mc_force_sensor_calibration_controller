@@ -4,6 +4,7 @@
 
 #include <RBDyn/FK.h>
 #include <SpaceVecAlg/SpaceVecAlg>
+#include <mc_rtc/constants.h>
 
 /** We redefined sva::Rot. functions to make them work with non-scalar types */
 
@@ -45,7 +46,7 @@ struct CostFunctor
   bool operator()(const T * const mass, const T * const rpy, const T * const com, const T * const offset, T * residual)
       const
   {
-    const T gravity(9.81);
+    const T gravity(mc_rtc::constants::GRAVITY);
     sva::ForceVec<T> vf(Eigen::Vector3<T>::Zero(), Eigen::Vector3<T>(T(0), T(0), -mass[0] * gravity));
     sva::PTransform<T> X_s_ds = sva::PTransform<T>(rpyToMat(rpy[0], rpy[1], rpy[2]));
     sva::PTransform<T> X_p_vb = sva::PTransform<T>(Eigen::Vector3<T>(com[0], com[1], com[2]));

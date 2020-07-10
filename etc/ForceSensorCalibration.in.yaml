@@ -35,6 +35,11 @@ collisions:
 # Initial set of contacts
 contacts: []
 
+# Run encoder observer by default
+# For floating base robots, we need to estimate the floating base orientation as well
+RunObservers: [Encoder]
+UpdateObservers: [Encoder]
+
 # Implement some additional text states
 states:
   Calibrate:
