@@ -1,4 +1,7 @@
 ---
+# Default observer setup for floating-based robots
+RunObservers: [Encoder, BodySensor]
+UpdateObservers: [Encoder, BodySensor]
 # If true, the FSM transitions are managed by an external tool
 Managed: false
 # If true and the FSM is self-managed, transitions should be triggered
@@ -276,27 +279,32 @@ panda_default:
       panda_jointA6: [2.0]
       panda_jointA7: [0.0]
   motion:
-    duration: 30
+    duration: 50
     stiffness: 10
     percentLimits: 0.8
     joints:
     - name: panda_jointA1
-      period: 10
+      period: 11
     - name: panda_jointA2
-      period: 10
+      period: 12
     - name: panda_jointA3
-      period: 10
+      period: 13
     - name: panda_jointA4
-      period: 10
+      period: 14
     - name: panda_jointA5
-      period: 10
+      period: 15
     - name: panda_jointA6
-      period: 10
+      period: 16
     - name: panda_jointA7
-      period: 10
+      period: 17
   collisions:
+  - body1: panda_linkA6
+    body2: ground
+    iDist: 0.7
+    sDist: 0.04
+    damping: 0.0
   - body1: panda_linkA7
     body2: ground
-    iDist: 0.5
-    sDist: 0.02
+    iDist: 0.7
+    sDist: 0.04
     damping: 0.0
