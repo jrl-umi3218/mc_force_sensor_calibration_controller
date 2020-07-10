@@ -22,13 +22,17 @@ mc_rtc::Configuration patchConfig(const mc_rbdyn::RobotModule & rm, const mc_rtc
   {
     out.add("UpdateObservers", rConfig("UpdateObservers"));
   }
+  if(rConfig.has("SingularityThreshold"))
+  {
+    out.add("SingularityThreshold", rConfig("SingularityThreshold"));
+  }
   return out;
 }
 
 }
 
 ForceSensorCalibration::ForceSensorCalibration(mc_rbdyn::RobotModulePtr rm, double dt, const mc_rtc::Configuration & config)
-: mc_control::fsm::Controller(rm, dt, config)
+: mc_control::fsm::Controller(rm, dt, patchConfig(*rm, config))
 {
   if(!config.has(rm->name))
   {

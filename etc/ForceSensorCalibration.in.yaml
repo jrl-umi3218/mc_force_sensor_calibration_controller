@@ -97,7 +97,9 @@ transitions:
 # Initial state
 init: Calibration::Choice
 
-plots: false
+# Drop measurements from calibration if the smallest singular value on the limb jacobian is smaller
+SingularityThreshold: 0 # 0 effectively disable this feature
+
 hrp4:
   RunObservers: [Encoder, BodySensor]
   UpdateObservers: [Encoder, BodySensor]
@@ -266,6 +268,7 @@ hrp2_drc:
     stiffness: 10
 
 panda_default:
+  SingularityThreshold: 0.08
   forceSensors:
   - [LeftHandForceSensor, forceLH]
   initial_posture:

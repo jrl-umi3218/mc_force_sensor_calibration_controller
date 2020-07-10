@@ -11,7 +11,7 @@
 struct CalibrationMotionLogging : mc_control::fsm::State
 {
 
-    inline void configure(const mc_rtc::Configuration & config) override {}
+    inline void configure(const mc_rtc::Configuration &) override {}
 
     void start(mc_control::fsm::Controller & ctl) override;
 
@@ -34,4 +34,6 @@ private:
       Eigen::JacobiSVD<Eigen::MatrixXd> svd;
     };
     std::unordered_map<std::string, Jacobian> jacobians_;
+    double singularityThreshold_;
+    std::unordered_map<std::string, std::pair<double, double>> measurementsCount_;
 };
