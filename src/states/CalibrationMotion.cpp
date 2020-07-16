@@ -24,6 +24,11 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
   for(const auto & jConfig : conf("joints"))
   {
     std::string name = jConfig("name");
+    if(!ctl.robot().hasJoint(name))
+    {
+      mc_rtc::log::error("[ForceSensorCalibration] No joint named \"{}\" in robot \"{}\"", name, ctl.robot().name());
+      output("FAILURE");
+    }
     auto percentLimits = percentLimits_;
     jConfig("percentLimits", percentLimits);
     mc_filter::utils::clampInPlace(percentLimits, 0, 1);
