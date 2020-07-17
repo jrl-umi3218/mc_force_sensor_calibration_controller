@@ -151,6 +151,34 @@ hrp4:
     - name: L_ANKLE_R
       period: 15
 
+hrp4j:
+  RunObservers: [Encoder, BodySensor]
+  UpdateObservers: [Encoder, BodySensor]
+  forceSensors:
+  - [LeftFootForceSensor, forceLF]
+  - [RightFootForceSensor, forceRF]
+  initial_posture:
+    completion:
+      eval: 0.06
+    target:
+      ## Legs
+      L_HIP_R: [0.25]
+      R_HIP_R: [-0.25]
+  motion:
+    duration: 30
+    stiffness: 10
+    percentLimits: 0.8
+    joints:
+      ## Legs
+    - name: R_ANKLE_P
+      period: 10
+    - name: L_ANKLE_P
+      period: 15
+    - name: R_ANKLE_R
+      period: 10
+    - name: L_ANKLE_R
+      period: 15
+
 hrp5_p:
   RunObservers: [Encoder, BodySensor]
   UpdateObservers: [Encoder, BodySensor]
