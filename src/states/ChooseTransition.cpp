@@ -17,7 +17,7 @@ void ChooseTransition::start(mc_control::fsm::Controller & ctl)
                           Button(action.first,
                             [this, action]()
                             {
-                              mc_rtc::log::info("[ChooseTransition] Action {} chosen, triggering output {}", action.first, action.second);
+                              mc_rtc::log::info("[{}] Action {} chosen, triggering output {}", name(), action.first, action.second);
                               output(action.second);
                             }));
   }

@@ -19,7 +19,7 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
   const auto & robotConf = ctl.config()(robot.name());
   if(!robotConf.has("forceSensors"))
   {
-    mc_rtc::log::error_and_throw<std::runtime_error>("Calibration controller expects a forceSensors entry");
+    mc_rtc::log::error_and_throw<std::runtime_error>("[{}] Calibration controller expects a forceSensors entry", name());
   }
   sensors_ = robotConf("forceSensors");
   double duration = robotConf("motion")("duration", 30);
@@ -39,7 +39,7 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
   {
     auto sensorN = sensorP.first;
     const auto filename = calib_path+"/calib_data."+sensorN;
-    mc_rtc::log::info("[ForceSensorCalibration] Loading calibration file {}", filename);
+    mc_rtc::log::info("[{}] Loading calibration file {}", name(), filename);
     auto & sensor = ctl.robot().forceSensor(sensorN);
     sensor.loadCalibrator(filename, ctl.robot().mbc().gravity);
 
@@ -100,11 +100,11 @@ void CheckResults::saveCalibration(mc_control::fsm::Controller & ctl)
   {
     if(bfs::create_directories(calib_dir))
     {
-      mc_rtc::log::info("[ForceSensorCalibration] Created missing calibration directory {}", calib_dir);
+      mc_rtc::log::info("[{}] Created missing calibration directory {}", name(), calib_dir);
     }
     else
     {
-      mc_rtc::log::error("[ForceSensorCalibration] Failed to create calibration directory {}", calib_dir);
+      mc_rtc::log::error("[{}] Failed to create calibration directory {}", name(), calib_dir);
       return;
     }
   }

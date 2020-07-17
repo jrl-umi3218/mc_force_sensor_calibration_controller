@@ -9,7 +9,7 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
   auto robotConf = ctl.config()(robot.name());
   if(!robotConf.has("motion"))
   {
-    mc_rtc::log::error("Calibration controller expects a joints entry");
+    mc_rtc::log::error("[{}] Calibration controller expects a joints entry", name());
     output("FAILURE");
   }
   auto conf = robotConf("motion");
@@ -26,7 +26,7 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
     std::string name = jConfig("name");
     if(!ctl.robot().hasJoint(name))
     {
-      mc_rtc::log::error("[ForceSensorCalibration] No joint named \"{}\" in robot \"{}\"", name, ctl.robot().name());
+      mc_rtc::log::error("[{}] No joint named \"{}\" in robot \"{}\"", this->name(), name, ctl.robot().name());
       output("FAILURE");
     }
     auto percentLimits = percentLimits_;
@@ -46,7 +46,7 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
 
     if(start < lower || start > upper)
     {
-      mc_rtc::log::error("[ForceSensorCalibration] Starting joint configuration of joint {} [{}] is outside of the reduced limit range [{}, {}] (percentLimits: {}, actual joint limits: [{}, {}]", name, start, lower, upper, actualLower, actualUpper);
+      mc_rtc::log::error("[{}] Starting joint configuration of joint {} [{}] is outside of the reduced limit range [{}, {}] (percentLimits: {}, actual joint limits: [{}, {}]", this->name(), name, start, lower, upper, actualLower, actualUpper);
       output("FAILURE");
     }
 
@@ -79,7 +79,7 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
                          mc_rtc::gui::Button("Stop Motion",
                                              [this]()
                                              {
-                                              mc_rtc::log::warning("[ForceSensorCalibration] Motion was interrupted before it's planned duration ({}/{})", dt_, duration_);
+                                              mc_rtc::log::warning("[{}] Motion was interrupted before it's planned duration ({}/{})", name(), dt_, duration_);
                                               interrupted_ = true;
                                              }
                                             )

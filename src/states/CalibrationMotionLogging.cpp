@@ -29,7 +29,7 @@ void CalibrationMotionLogging::start(mc_control::fsm::Controller & ctl_)
   {
     if(!boost::filesystem::create_directory(outputPath_))
     {
-      mc_rtc::log::error_and_throw<std::runtime_error>("[CalibrationMotionLogging] Could not create output folder {}", outputPath_);
+      mc_rtc::log::error_and_throw<std::runtime_error>("[{}] Could not create output folder {}", name(), outputPath_);
     }
   }
 
