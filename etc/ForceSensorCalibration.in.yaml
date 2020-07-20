@@ -268,33 +268,33 @@ hrp2_drc:
       RLEG_JOINT1: [-0.2]
       LLEG_JOINT1: [0.2]
   motion:
-    percentLimits: 0.9
+    percentLimits: 0.8
     joints:
       # Left wrist
       - name: LARM_JOINT4
-        period: 15
+        period: 25
       - name: LARM_JOINT5
-        period: 12
+        period: 22
       - name: LARM_JOINT6
-        period: 10
+        period: 20
       # right wrist
       - name: RARM_JOINT4
-        period: 15
+        period: 25
       - name: RARM_JOINT5
-        period: 12
+        period: 22
       - name: RARM_JOINT6
-        period: 10
+        period: 20
       # left leg
       - name: LLEG_JOINT4
-        period: 10
+        period: 20
       - name: LLEG_JOINT5
-        period: 12
+        period: 22
       # right leg
       - name: RLEG_JOINT4
-        period: 10
+        period: 20
       - name: RLEG_JOINT5
-        period: 12
-    duration: 30
+        period: 22
+    duration: 60
     stiffness: 10
 
 jvrc1:
