@@ -9,6 +9,7 @@ using Style = mc_rtc::gui::plot::Style;
 void ShowForces::configure(const mc_rtc::Configuration & config)
 {
   config("category", category_);
+  config("forceScale", forceScale_);
 }
 
 
@@ -40,13 +41,12 @@ void ShowForces::addWrenchWithoutGravityPlot(const std::string & name, const std
     plot::Y(name+ " (y)", [&robot, &fs, surface]() { return robot.surfaceWrench(surface).force().y(); }, Color::Green, Style::Dashed),
     plot::Y(name+ " (z)", [&robot, &fs, surface]() { return robot.surfaceWrench(surface).force().z(); }, Color::Blue, Style::Dashed));
   plots_.push_back(name);
-
 }
 
 void ShowForces::addWrenchVector(const std::string & name, mc_rtc::gui::StateBuilder & gui, const mc_rbdyn::Robot & robot, const mc_rbdyn::ForceSensor & fs)
 {
   gui.addElement(category_,
-                 Force(name,
+                 Force(name, forceConfig_,
                        [&fs]()
                        {
                         return fs.wrench();
@@ -60,7 +60,7 @@ void ShowForces::addWrenchVector(const std::string & name, mc_rtc::gui::StateBui
 void ShowForces::addWrenchWithoutGravityVector(const std::string & name, mc_rtc::gui::StateBuilder & gui, const mc_rbdyn::Robot & robot, const mc_rbdyn::ForceSensor & fs)
 {
   gui.addElement(category_,
-                 Force(name,
+                 Force(name, forceConfig_,
                        [&fs, &robot]()
                        {
                         return fs.wrenchWithoutGravity(robot);
@@ -74,7 +74,7 @@ void ShowForces::addWrenchWithoutGravityVector(const std::string & name, mc_rtc:
 void ShowForces::addWrenchWithoutGravityVector(const std::string & name, const std::string & surface, mc_rtc::gui::StateBuilder & gui, const mc_rbdyn::Robot & robot, const mc_rbdyn::ForceSensor & fs)
 {
   gui.addElement(category_,
-                 Force(name,
+                 Force(name, forceConfig_,
                        [&fs, &robot, surface]()
                        {
                         return robot.surfaceWrench(surface);
@@ -89,6 +89,7 @@ void ShowForces::start(mc_control::fsm::Controller & ctl)
 {
   auto & robot = ctl.robot();
 
+  forceConfig_.force_scale *= forceScale_;
   for(const auto & fs : robot.forceSensors())
   {
     const auto & name = fs.name();
