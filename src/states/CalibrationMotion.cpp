@@ -5,6 +5,10 @@
 
 void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
 {
+  ctl.datastore().make_call("CalibrationMotion::Stop", [this]()
+                            {
+                              interrupted_ = true;
+                            });
   auto & robot = ctl.robot();
   auto robotConf = ctl.config()(robot.name());
   if(!robotConf.has("motion"))
@@ -79,7 +83,7 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
                          mc_rtc::gui::Button("Stop Motion",
                                              [this]()
                                              {
-                                              mc_rtc::log::warning("[{}] Motion was interrupted before it's planned duration ({}/{})", name(), dt_, duration_);
+                                              mc_rtc::log::warning("[{}] Motion was interrupted before it's planned duration ({:.2f}/{:.2f}s)", name(), dt_, duration_);
                                               interrupted_ = true;
                                              }
                                             )
@@ -100,15 +104,18 @@ bool CalibrationMotion::run(mc_control::fsm::Controller & ctl_)
     updateJoint();
   }
 
-  if(interrupted_ || dt_ > duration_)
+  if(dt_ > duration_)
   {
     output("OK");
     return true;
   }
-  else
+  else if(interrupted_)
   {
-    dt_ += ctl_.timeStep;
+    output("INTERRUPTED");
+    return true;
   }
+
+  dt_ += ctl_.timeStep;
   return false;
 }
 
@@ -118,6 +125,7 @@ void CalibrationMotion::teardown(mc_control::fsm::Controller & ctl_)
   postureTask->stiffness(savedStiffness_);
   ctl_.gui()->removeElement({}, "Progress");
   ctl_.gui()->removeElement({}, "Stop Motion");
+  ctl_.datastore().remove("CalibrationMotion::Stop");
 }
 
 EXPORT_SINGLE_STATE("CalibrationMotion", CalibrationMotion)

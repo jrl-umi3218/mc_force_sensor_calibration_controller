@@ -71,7 +71,8 @@ states:
     transitions:
     - [InitialPosture, OK, Calibrate, Auto]
     - [Calibrate, OK, RunCalibrationScript, Auto]
-    - [Calibrate, FAILURE, HalfSitting, Auto]
+    - [Calibrate, FAILURE, GoHalfSitting, Auto]
+    - [Calibrate, INTERRUPTED, GoHalfSitting, Auto]
     - [RunCalibrationScript, SUCCESS, CheckCalibration, Auto]
     - [RunCalibrationScript, FAILED, GoHalfSitting, Auto]
     - [CheckCalibration, OK, GoHalfSitting, Auto]
@@ -81,6 +82,7 @@ states:
     transitions:
     - [InitialPosture, OK, CheckCalibration, Auto]
     - [CheckCalibration, OK, GoHalfSitting, Auto]
+    - [CheckCalibration, INTERRUPTED, GoHalfSitting, Auto]
     configs:
       CheckCalibration:
         configs:
@@ -89,7 +91,7 @@ states:
 
   Calibration::FSM::ShowForces:
     base: ShowForces
-    forceScale: 10 
+    forceScale: 10
 
 # Transitions map
 transitions:
@@ -100,7 +102,7 @@ transitions:
 - [Calibration::Choice, ShowForces, Calibration::FSM::ShowForces, Auto]
   # Go back to choice
 - [Calibration::FSM::Calibrate, OK, Calibration::Choice, Auto]
-- [Calibration::FSM::ShowForces, OK, Calibration::Choice, Strict]
+- [Calibration::FSM::ShowForces, OK, Calibration::Choice, Auto]
 - [Calibration::FSM::Check, OK, Calibration::Choice, Auto]
 # Initial state
 init: PressureCheck

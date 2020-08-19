@@ -48,9 +48,9 @@ struct ShowForces : mc_control::fsm::State
  private:
     double t_ = 0;
     std::vector<std::pair<std::string, std::string>> sensors_;
-    bool running_ = true;
+    bool stop_ = false;
 
-    std::vector<std::string> category_;
+    std::vector<std::string> category_ = {"Calibration", "Show Forces"};
     std::vector<std::string> plots_;
     // Map of force sensor to surface name (chosen in the gui)
     std::map<std::string, std::string> surfaces_;

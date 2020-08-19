@@ -89,6 +89,13 @@ void ShowForces::start(mc_control::fsm::Controller & ctl)
 {
   auto & robot = ctl.robot();
 
+  ctl.gui()->addElement(category_,
+                        Button("Stop",
+                               [this]()
+                               {
+                                stop_ = true;
+                               }));
+
   forceConfig_.force_scale *= forceScale_;
   for(const auto & fs : robot.forceSensors())
   {
@@ -213,11 +220,12 @@ void ShowForces::start(mc_control::fsm::Controller & ctl)
 bool ShowForces::run(mc_control::fsm::Controller & ctl_)
 {
   t_ += ctl_.timeStep;
-  return true;
+  return stop_;
 }
 
 void ShowForces::teardown(mc_control::fsm::Controller & ctl)
 {
+  ctl.gui()->removeElement(category_, "Stop");
   for(const auto & plot : plots_)
   {
     ctl.gui()->removePlot(plot);

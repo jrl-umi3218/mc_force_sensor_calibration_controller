@@ -68,7 +68,7 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
               saveCalibration(ctl);
              }),
       Button("Finish without saving",
-             [this]()
+             [this, &ctl]()
              {
               running_ = false;
              }),
@@ -87,6 +87,13 @@ bool CheckResults::run(mc_control::fsm::Controller & ctl_)
   {
     t_ += ctl_.timeStep;
     return false;
+  }
+  else
+  {
+    if(ctl_.datastore().has("CalibrationMotion::Stop"))
+    {
+      ctl_.datastore().call("CalibrationMotion::Stop");
+    }
   }
   output("OK");
   return true;
@@ -137,6 +144,7 @@ void CheckResults::teardown(mc_control::fsm::Controller & ctl)
     ctl.gui()->removeElement({}, "Save calibration");
     ctl.gui()->removeElement({}, "Finish without saving");
     ctl.gui()->removeElement({}, "Save and finish");
+    ctl.logger().removeLogEntry(sensor + "_calibrated");
   }
 }
 
