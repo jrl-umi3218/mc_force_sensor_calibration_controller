@@ -2,6 +2,12 @@
 # Default observer setup for fixed-base robots
 RunObservers: [Encoder]
 UpdateObservers: [Encoder]
+
+PipelineObservers:
+- name: "MainPipeline"
+  observers:
+    - type: Encoder
+
 # If true, the FSM transitions are managed by an external tool
 Managed: false
 # If true and the FSM is self-managed, transitions should be triggered
@@ -103,8 +109,11 @@ init: PressureCheck
 SingularityThreshold: 0 # 0 effectively disable this feature
 
 hrp4:
-  RunObservers: [Encoder, BodySensor]
-  UpdateObservers: [Encoder, BodySensor]
+  ObserverPipelines:
+  - name: "EncoderAndBodySensor"
+    observers:
+      - type: Encoder
+      - type: BodySensor
   forceSensors:
   - [LeftHandForceSensor, forceLH]
   - [RightHandForceSensor, forceRH]
@@ -183,8 +192,11 @@ hrp4j:
       period: 15
 
 hrp5_p:
-  RunObservers: [Encoder, BodySensor]
-  UpdateObservers: [Encoder, BodySensor]
+  ObserverPipelines:
+  - name: "EncoderAndBodySensor"
+    observers:
+      - type: Encoder
+      - type: BodySensor
   forceSensors:
   - [LeftHandForceSensor, forceLH]
   - [RightHandForceSensor, forceRH]
@@ -239,8 +251,11 @@ hrp5_p:
       percentLimits: 0.5
 
 hrp2_drc:
-  RunObservers: [Encoder, BodySensor]
-  UpdateObservers: [Encoder, BodySensor]
+  ObserverPipelines:
+  - name: "EncoderAndBodySensor"
+    observers:
+      - type: Encoder
+      - type: BodySensor
   forceSensors:
   - [LeftHandForceSensor, forceLH]
   - [RightHandForceSensor, forceRH]
@@ -285,8 +300,11 @@ hrp2_drc:
     stiffness: 10
 
 jvrc1:
-  RunObservers: [Encoder, BodySensor]
-  UpdateObservers: [Encoder, BodySensor]
+  ObserverPipelines:
+  - name: "EncoderAndBodySensor"
+    observers:
+      - type: Encoder
+      - type: BodySensor
   forceSensors:
   - [LeftHandForceSensor, forceLH]
   - [RightHandForceSensor, forceRH]
@@ -332,6 +350,10 @@ jvrc1:
       period: 15
 
 panda_default:
+  ObserverPipelines:
+  - name: "PandaEncoderPipeline"
+    observers:
+      - type: Encoder
   SingularityThreshold: 0.08
   forceSensors:
   - [LeftHandForceSensor, forceLH]

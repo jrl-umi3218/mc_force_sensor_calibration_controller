@@ -13,8 +13,13 @@ struct ForceSensorCalibration_DLLAPI ForceSensorCalibration : public mc_control:
 
     void reset(const mc_control::ControllerResetData & reset_data) override;
 
-    // Override to set-up a different pipeline per-robot
-    bool resetObservers() override;
+    /**
+     * Do not create observers from global configuration.
+     * They will be created in the constructor according to the per-robot
+     * configuration instead
+     */
+    void createObserverPipelines(const mc_rtc::Configuration & config) override
+    {}
 
 private:
     mc_rtc::Configuration config_;
