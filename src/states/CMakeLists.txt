@@ -1,3 +1,4 @@
+add_fsm_state_simple(PressureCheck)
 add_fsm_state_simple(ChooseTransition)
 add_fsm_state_simple(ShowForces)
 add_fsm_state_simple(InitialPosture)

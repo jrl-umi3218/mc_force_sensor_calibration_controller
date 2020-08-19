@@ -87,6 +87,7 @@ states:
 # Transitions map
 transitions:
   # Choose what to do
+- [PressureCheck, OK, Calibration::Choice, Auto]
 - [Calibration::Choice, Calibrate, Calibration::FSM::Calibrate, Auto]
 - [Calibration::Choice, Check, Calibration::FSM::Check, Auto]
 - [Calibration::Choice, ShowForces, Calibration::FSM::ShowForces, Auto]
@@ -95,7 +96,7 @@ transitions:
 - [Calibration::FSM::ShowForces, OK, Calibration::Choice, Strict]
 - [Calibration::FSM::Check, OK, Calibration::Choice, Auto]
 # Initial state
-init: Calibration::Choice
+init: PressureCheck
 
 # Drop measurements from calibration if the smallest singular value on the limb jacobian is smaller
 SingularityThreshold: 0 # 0 effectively disable this feature
@@ -108,6 +109,7 @@ hrp4:
   - [RightHandForceSensor, forceRH]
   - [LeftFootForceSensor, forceLF]
   - [RightFootForceSensor, forceRF]
+  maxPressureThreshold: 50
   initial_posture:
     completion:
       eval: 0.06
