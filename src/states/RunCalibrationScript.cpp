@@ -9,8 +9,7 @@ namespace bfs = boost::filesystem;
 #include "../ForceSensorCalibration.h"
 #include "../calibrate.h"
 
-//FIXME DIRTY
-#include "../../build/src/config.h"
+#include "config.h"
 
 RunCalibrationScript::~RunCalibrationScript()
 {
