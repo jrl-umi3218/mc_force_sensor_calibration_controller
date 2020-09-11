@@ -1,59 +1,94 @@
 #include "RunCalibrationScript.h"
-#include "../ForceSensorCalibration.h"
-#include "../../build/src/config.h"
+
 #include <mc_rbdyn/rpy_utils.h>
 #include <mc_rtc/io_utils.h>
+
 #include <boost/filesystem.hpp>
+namespace bfs = boost::filesystem;
+
+#include "../ForceSensorCalibration.h"
+#include "../calibrate.h"
 
 RunCalibrationScript::~RunCalibrationScript()
 {
   th_.join();
 }
 
-void RunCalibrationScript::configure(const mc_rtc::Configuration & config)
+void RunCalibrationScript::configure(const mc_rtc::Configuration &)
 {
 }
 
 void RunCalibrationScript::start(mc_control::fsm::Controller & ctl_)
 {
+  auto & robot = ctl_.robot();
+  auto robotConf = ctl_.config()(robot.name());
   outputPath_ = "/tmp/calib-force-sensors-result-" + ctl_.robot().name();
-  std::string moduleName = ctl_.config()("MainRobot");
-  std::string robotName = ctl_.robot().name();
-  bool showPlots = ctl_.config()("plots", false);
 
-  th_ = std::thread(
-      [this, showPlots, robotName, moduleName]()
+  // Attempt to create the output folder
+  if(!boost::filesystem::exists(outputPath_))
+  {
+    if(!boost::filesystem::create_directory(outputPath_))
+    {
+      mc_rtc::log::error_and_throw<std::runtime_error>("[{}] Could not create output folder {}", name(), outputPath_);
+    }
+  }
+
+  sensors_ = robotConf("forceSensors");
+  bool verbose = robotConf("verboseSolver", false);
+  auto & measurements = ctl_.datastore().get<SensorMeasurements>("measurements");
+  th_ = std::thread([&,verbose,this]() {
+    for(const auto & s : sensors_)
+    {
+      mc_rtc::log::info("Start calibration optimization for {}", s);
+      auto result = calibrate(ctl_.robot(), s, measurements.at(s), verbose);
+      success_ = result.success && success_;
+      if(result.success)
       {
-        std::string plots = showPlots ? " --show-plots " : "";
-        std::string command = std::string(calib_config::CALIBRATION_SCRIPT_EXECUTABLE) + plots + " --robot " + moduleName + " --dry-run /tmp/calib-force-sensors-data-"+robotName+" --dry-run-path " + outputPath_ + " all";
-        LOG_INFO("Executing calibration script: " << command);
-        auto result = std::system(command.c_str());
-        success_ = (result == 0);
-        completed_ = true;
-      });
-  ctl_.gui()->addElement({},
-                         mc_rtc::gui::Label("Status",
-                                            []()
-                                            {
-                                            return "Calibration script running, this may take several minutes";
-                                            })
-                         );
+        mc_rtc::log::success("Calibration succeeded for {}", s);
+        bfs::path out(outputPath_);
+        out += "/calib_data." + s;
+        std::ofstream ofs(out.string());
+        if(!ofs.good())
+        {
+          mc_rtc::log::error("Could not write temporary calibration file to {}", out.string());
+          continue;
+        }
+        ofs << result.mass << "\n";
+        ofs << result.rpy[0] << "\n";
+        ofs << result.rpy[1] << "\n";
+        ofs << result.rpy[2] << "\n";
+        ofs << result.com[0] << "\n";
+        ofs << result.com[1] << "\n";
+        ofs << result.com[2] << "\n";
+        ofs << result.offset[0] << "\n";
+        ofs << result.offset[1] << "\n";
+        ofs << result.offset[2] << "\n";
+        ofs << result.offset[3] << "\n";
+        ofs << result.offset[4] << "\n";
+        ofs << result.offset[5] << "\n";
+        mc_rtc::log::info("Wrote temporary calibration file to {}", out.string());
+      }
+      else
+      {
+        mc_rtc::log::error("Calibration failed for {}", s);
+      }
+    }
+    completed_ = true;
+  });
 }
 
 
-bool RunCalibrationScript::run(mc_control::fsm::Controller & ctl_)
+bool RunCalibrationScript::run(mc_control::fsm::Controller &)
 {
-  auto & ctl = static_cast<ForceSensorCalibration &>(ctl_);
-
   if(completed_)
   {
     if(!success_)
     {
-      LOG_ERROR("[ForceSensor] Calibration script failed");
+      mc_rtc::log::error("[ForceSensor] Calibration script failed");
       output("FAILED");
       return true;
     }
-    LOG_INFO("[ForceSensorCalibration] Calibration files written to " << outputPath_);
+    mc_rtc::log::info("[ForceSensorCalibration] Calibration files written to {}", outputPath_);
     output("SUCCESS");
     return true;
   }

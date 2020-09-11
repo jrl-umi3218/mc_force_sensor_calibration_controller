@@ -26,18 +26,14 @@ robots:
 constraints:
 - type: contact
 - type: kinematics
-  robotIndex: 0
   damper: [0.1, 0.01, 0.5]
 - type: compoundJoint
-  robotIndex: 0
 # Collision constraint
 collisions:
 - type: collision
-  r1Index: 0
-  r2Index: 0
   useMinimal: true
 # Initial set of contacts
-contacts: {}
+contacts: []
 
 # Implement some additional text states
 states:
@@ -56,53 +52,71 @@ states:
   Calibration::Choice:
     base: ChooseTransition
     category: ["Calibration"]
-    transitions:
-    - [Start calibration, Calibrate]
-    - [Check calibration, Check]
-    - [Show forces, ShowForces]
+    actions:
+      Start calibration: Calibrate
+      Check calibration: Check
+      Show forces: ShowForces
 
   Calibration::FSM::Calibrate:
     base: Meta
     transitions:
     - [InitialPosture, OK, Calibrate, Auto]
     - [Calibrate, OK, RunCalibrationScript, Auto]
-    - [Calibrate, FAILURE, HalfSitting, Auto]
+    - [Calibrate, FAILURE, GoHalfSitting, Auto]
+    - [Calibrate, INTERRUPTED, GoHalfSitting, Auto]
     - [RunCalibrationScript, SUCCESS, CheckCalibration, Auto]
     - [RunCalibrationScript, FAILED, GoHalfSitting, Auto]
     - [CheckCalibration, OK, GoHalfSitting, Auto]
+    - [CheckCalibration, INTERRUPTED, GoHalfSitting, Auto]
+    - [CheckCalibration, FAILURE, GoHalfSitting, Auto]
 
   Calibration::FSM::Check:
     base: Meta
     transitions:
     - [InitialPosture, OK, CheckCalibration, Auto]
     - [CheckCalibration, OK, GoHalfSitting, Auto]
+    - [CheckCalibration, INTERRUPTED, GoHalfSitting, Auto]
     configs:
       CheckCalibration:
-        checkDefault: true
+        configs:
+          CheckResults:
+            checkDefault: true
 
   Calibration::FSM::ShowForces:
     base: ShowForces
+    forceScale: 10
 
 # Transitions map
 transitions:
   # Choose what to do
-- [Calibration::Choice, Calibrate, Calibration::FSM::Calibrate]
-- [Calibration::Choice, Check, Calibration::FSM::Check]
-- [Calibration::Choice, ShowForces, Calibration::FSM::ShowForces]
+- [PressureCheck, OK, Calibration::Choice, Auto]
+- [Calibration::Choice, Calibrate, Calibration::FSM::Calibrate, Auto]
+- [Calibration::Choice, Check, Calibration::FSM::Check, Auto]
+- [Calibration::Choice, ShowForces, Calibration::FSM::ShowForces, Auto]
   # Go back to choice
 - [Calibration::FSM::Calibrate, OK, Calibration::Choice, Auto]
-- [Calibration::FSM::ShowForces, OK, Calibration::Choice, Strict]
+- [Calibration::FSM::ShowForces, OK, Calibration::Choice, Auto]
 - [Calibration::FSM::Check, OK, Calibration::Choice, Auto]
 # Initial state
-init: Calibration::Choice
+init: PressureCheck
 
-plots: false
+# Drop measurements from calibration if the smallest singular value on the limb jacobian is smaller
+SingularityThreshold: 0 # 0 effectively disable this feature
+
+DefaultObserverPipelines: &observers
+  - name: "EncoderAndBodySensor"
+    observers:
+      - type: Encoder
+      - type: BodySensor
+
 hrp4:
+  ObserverPipelines: *observers
   forceSensors:
-  - [LeftHandForceSensor, forceLH]
-  - [RightHandForceSensor, forceRH]
-  - [LeftFootForceSensor, forceLF]
-  - [RightFootForceSensor, forceRF]
+  - LeftHandForceSensor
+  - RightHandForceSensor
+  - LeftFootForceSensor
+  - RightFootForceSensor
+  maxPressureThreshold: 50
   initial_posture:
     completion:
       eval: 0.06
@@ -136,20 +150,32 @@ hrp4:
       period: 16
     - name: R_WRIST_Y
       period: 20
-      # Left leg
-    - name: L_WRIST_P
+      ## Legs
+    - name: R_ANKLE_P
       period: 10
-    - name: L_WRIST_R
-      period: 16
-    - name: L_WRIST_Y
-      period: 20
-      # right wrist
-    - name: R_WRIST_P
+    - name: L_ANKLE_P
+      period: 15
+    - name: R_ANKLE_R
       period: 10
-    - name: R_WRIST_R
-      period: 16
-    - name: R_WRIST_Y
-      period: 20
+    - name: L_ANKLE_R
+      period: 15
+
+hrp4j:
+  ObserverPipelines: *observers
+  forceSensors: [LeftFootForceSensor, RightFootForceSensor]
+  maxPressureThreshold: 50
+  initial_posture:
+    completion:
+      eval: 0.06
+    target:
+      ## Legs
+      L_HIP_R: [0.25]
+      R_HIP_R: [-0.25]
+  motion:
+    duration: 30
+    stiffness: 10
+    percentLimits: 0.8
+    joints:
       ## Legs
     - name: R_ANKLE_P
       period: 10
@@ -161,11 +187,12 @@ hrp4:
       period: 15
 
 hrp5_p:
+  ObserverPipelines: *observers
   forceSensors:
-  - [LeftHandForceSensor, forceLH]
-  - [RightHandForceSensor, forceRH]
-  - [LeftFootForceSensor, forceLF]
-  - [RightFootForceSensor, forceRF]
+  - LeftHandForceSensor
+  - RightHandForceSensor
+  - LeftFootForceSensor
+  - RightFootForceSensor
   initial_posture:
     completion:
       eval: 0.06
@@ -215,11 +242,13 @@ hrp5_p:
       percentLimits: 0.5
 
 hrp2_drc:
+  ObserverPipelines: *observers
   forceSensors:
-  - [LeftHandForceSensor, forceLH]
-  - [RightHandForceSensor, forceRH]
-  - [LeftFootForceSensor, forceLF]
-  - [RightFootForceSensor, forceRF]
+  - LeftHandForceSensor
+  - RightHandForceSensor
+  - LeftFootForceSensor
+  - RightFootForceSensor
+  maxPressureThreshold: 50
   initial_posture:
     completion:
       eval: 0.06
@@ -229,31 +258,128 @@ hrp2_drc:
       RLEG_JOINT1: [-0.2]
       LLEG_JOINT1: [0.2]
   motion:
-    percentLimits: 0.9
+    percentLimits: 0.8
     joints:
       # Left wrist
       - name: LARM_JOINT4
-        period: 15
+        period: 25
       - name: LARM_JOINT5
-        period: 12
+        period: 22
       - name: LARM_JOINT6
-        period: 10
+        period: 20
       # right wrist
       - name: RARM_JOINT4
-        period: 15
+        period: 25
       - name: RARM_JOINT5
-        period: 12
+        period: 22
       - name: RARM_JOINT6
-        period: 10
+        period: 20
       # left leg
       - name: LLEG_JOINT4
-        period: 10
+        period: 20
       - name: LLEG_JOINT5
-        period: 12
+        period: 22
       # right leg
       - name: RLEG_JOINT4
-        period: 10
+        period: 20
       - name: RLEG_JOINT5
-        period: 12
+        period: 22
+    duration: 60
+    stiffness: 10
+
+jvrc1:
+  ObserverPipelines: *observers
+  forceSensors:
+  - LeftHandForceSensor
+  - RightHandForceSensor
+  - LeftFootForceSensor
+  - RightFootForceSensor
+  maxPressureThreshold: 50
+  initial_posture:
+    completion:
+      eval: 0.06
+    target:
+      ## Arms
+      R_SHOULDER_P: [-0.4]
+      L_SHOULDER_P: [-0.4]
+      R_SHOULDER_R: [-0.5]
+      L_SHOULDER_R: [0.5]
+      R_ELBOW_P: [-1.5]
+      L_ELBOW_P: [-1.5]
+      ## Legs
+      L_HIP_R: [0.25]
+      R_HIP_R: [-0.25]
+  motion:
     duration: 30
     stiffness: 10
+    percentLimits: 0.8
+    joints:
+      # Left wrist
+    - name: L_WRIST_R
+      period: 16
+    - name: L_WRIST_Y
+      period: 20
+      # right wrist
+    - name: R_WRIST_R
+      period: 16
+    - name: R_WRIST_Y
+      period: 20
+      # Legs
+    - name: R_ANKLE_P
+      period: 10
+    - name: L_ANKLE_P
+      period: 15
+    - name: R_ANKLE_R
+      period: 10
+    - name: L_ANKLE_R
+      period: 15
+
+panda_default:
+  ObserverPipelines:
+  - name: "PandaEncoderPipeline"
+    observers:
+      - type: Encoder
+  SingularityThreshold: 0.08
+  forceSensors:
+  - [LeftHandForceSensor, forceLH]
+  initial_posture:
+    completion:
+      eval: 0.05
+    target:
+      panda_joint1: [0.0]
+      panda_joint2: [0.0]
+      panda_joint3: [0.0]
+      panda_joint4: [-2.0]
+      panda_joint5: [0.0]
+      panda_joint6: [2.0]
+      panda_joint7: [0.0]
+  motion:
+    duration: 50
+    stiffness: 10
+    percentLimits: 0.8
+    joints:
+    - name: panda_joint1
+      period: 11
+    - name: panda_joint2
+      period: 12
+    - name: panda_joint3
+      period: 13
+    - name: panda_joint4
+      period: 14
+    - name: panda_joint5
+      period: 15
+    - name: panda_joint6
+      period: 16
+    - name: panda_joint7
+      period: 17
+  collisions:
+  - body1: panda_link6*
+    body2: ground
+    iDist: 0.7
+    sDist: 0.04
+    damping: 0.0
+  - body1: panda_link7*
+    body2: ground
+    iDist: 0.7
+    sDist: 0.04
+    damping: 0.0

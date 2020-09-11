@@ -8,7 +8,7 @@
 struct RunCalibrationScript : mc_control::fsm::State
 {
 
-    ~RunCalibrationScript();
+    ~RunCalibrationScript() override;
 
     void configure(const mc_rtc::Configuration & config) override;
 
@@ -21,6 +21,7 @@ struct RunCalibrationScript : mc_control::fsm::State
 private:
     std::thread th_;
     std::atomic<bool> completed_{false};
-    bool success_ = false;
+    bool success_ = true;
     std::string outputPath_;
+    std::vector<std::string> sensors_;
 };

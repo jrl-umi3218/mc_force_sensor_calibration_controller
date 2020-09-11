@@ -1,6 +1,7 @@
 #pragma once
 
 #include <mc_control/fsm/State.h>
+#include <mc_rtc/gui/types.h>
 
 namespace mc_rbdyn
 {
@@ -47,10 +48,12 @@ struct ShowForces : mc_control::fsm::State
  private:
     double t_ = 0;
     std::vector<std::pair<std::string, std::string>> sensors_;
-    bool running_ = true;
+    bool stop_ = false;
 
-    std::vector<std::string> category_;
+    std::vector<std::string> category_ = {"Calibration", "Show Forces"};
     std::vector<std::string> plots_;
     // Map of force sensor to surface name (chosen in the gui)
     std::map<std::string, std::string> surfaces_;
+    double forceScale_ = 1;
+    mc_rtc::gui::ForceConfig forceConfig_;
 };

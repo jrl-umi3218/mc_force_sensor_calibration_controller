@@ -17,13 +17,13 @@ void ChooseTransition::start(mc_control::fsm::Controller & ctl)
                           Button(action.first,
                             [this, action]()
                             {
-                              LOG_INFO("[ChooseTransition] Action " << action.first << " chosen, triggering output " << action.second);
+                              mc_rtc::log::info("[{}] Action {} chosen, triggering output {}", name(), action.first, action.second);
                               output(action.second);
                             }));
   }
 }
 
-bool ChooseTransition::run(mc_control::fsm::Controller & ctl_)
+bool ChooseTransition::run(mc_control::fsm::Controller &)
 {
   if(output().empty())
   {

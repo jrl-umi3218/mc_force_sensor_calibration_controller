@@ -19,7 +19,7 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
   const auto & robotConf = ctl.config()(robot.name());
   if(!robotConf.has("forceSensors"))
   {
-    LOG_ERROR_AND_THROW(std::runtime_error, "Calibration controller expects a forceSensors entry");
+    mc_rtc::log::error_and_throw<std::runtime_error>("[{}] Calibration controller expects a forceSensors entry", name());
   }
   sensors_ = robotConf("forceSensors");
   double duration = robotConf("motion")("duration", 30);
@@ -27,29 +27,31 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
   std::string calib_path = "";
   if(checkDefault_)
   {
-    calib_path = "/tmp/calib-force-sensors-result-"+ctl.robot().name();
+    calib_path = ctl.robot().module().calib_dir;
   }
   else
   {
-    calib_path = ctl.robot().module().calib_dir;
+    calib_path = "/tmp/calib-force-sensors-result-"+ctl.robot().name();
   }
 
   // Load new calibration parameters
-  for(const auto & sensorP : sensors_)
+  for(const auto & sensorN : sensors_)
   {
-    auto sensor = sensorP.first;
-    const auto filename = calib_path+"/calib_data."+sensor;
-    LOG_INFO("[ForceSensorCalibration] Loading calibration file " << filename);
-    ctl.robot().forceSensor(sensor).loadCalibrator(filename, ctl.robot().mbc().gravity);
+    const auto filename = calib_path+"/calib_data."+sensorN;
+    mc_rtc::log::info("[{}] Loading calibration file {}", name(), filename);
+    auto & sensor = ctl.robot().forceSensor(sensorN);
+    sensor.loadCalibrator(filename, ctl.robot().mbc().gravity);
 
-    ctl.gui()->addPlot(sensor,
+    ctl.logger().addLogEntry(sensor.name() + "_calibrated", [&robot,&sensor]() { return sensor.wrenchWithoutGravity(robot); });
+
+    ctl.gui()->addPlot(sensorN,
                    plot::X({"t", {t_ + 0, t_ + duration}}, [this]() { return t_; }),
-                   plot::Y("Wrenches calibrated (x)", [this, &robot]() { return robot.forceSensor("RightHandForceSensor").wrenchWithoutGravity(robot).force().x(); }, Color::Red, Style::Solid),
-                   plot::Y("Wrenches calibrated (y)", [this, &robot]() { return robot.forceSensor("RightHandForceSensor").wrenchWithoutGravity(robot).force().y(); }, Color::Green, Style::Solid),
-                   plot::Y("Wrenches calibrated (y)", [this, &robot]() { return robot.forceSensor("RightHandForceSensor").wrenchWithoutGravity(robot).force().z(); }, Color::Blue, Style::Solid),
-                   plot::Y("Wrenches raw(x)", [this, &robot]() { return robot.forceSensor("RightHandForceSensor").wrench().force().x(); }, Color::Red, Style::Dashed),
-                   plot::Y("Wrenches raw(y)", [this, &robot]() { return robot.forceSensor("RightHandForceSensor").wrench().force().y(); }, Color::Green, Style::Dashed),
-                   plot::Y("Wrenches raw(z)", [this, &robot]() { return robot.forceSensor("RightHandForceSensor").wrench().force().z(); }, Color::Blue, Style::Dashed)
+                   plot::Y("Wrenches calibrated (x)", [&robot,&sensor]() { return sensor.wrenchWithoutGravity(robot).force().x(); }, Color::Red, Style::Solid),
+                   plot::Y("Wrenches calibrated (y)", [&robot,&sensor]() { return sensor.wrenchWithoutGravity(robot).force().y(); }, Color::Green, Style::Solid),
+                   plot::Y("Wrenches calibrated (y)", [&robot,&sensor]() { return sensor.wrenchWithoutGravity(robot).force().z(); }, Color::Blue, Style::Solid),
+                   plot::Y("Wrenches raw(x)", [&sensor]() { return sensor.wrench().force().x(); }, Color::Red, Style::Dashed),
+                   plot::Y("Wrenches raw(y)", [&sensor]() { return sensor.wrench().force().y(); }, Color::Green, Style::Dashed),
+                   plot::Y("Wrenches raw(z)", [&sensor]() { return sensor.wrench().force().z(); }, Color::Blue, Style::Dashed)
                    );
   }
 
@@ -65,7 +67,7 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
               saveCalibration(ctl);
              }),
       Button("Finish without saving",
-             [this]()
+             [this, &ctl]()
              {
               running_ = false;
              }),
@@ -85,40 +87,46 @@ bool CheckResults::run(mc_control::fsm::Controller & ctl_)
     t_ += ctl_.timeStep;
     return false;
   }
+  else
+  {
+    if(ctl_.datastore().has("CalibrationMotion::Stop"))
+    {
+      ctl_.datastore().call("CalibrationMotion::Stop");
+    }
+  }
   output("OK");
   return true;
 }
 
 void CheckResults::saveCalibration(mc_control::fsm::Controller & ctl)
 {
-  LOG_INFO("[ForceSensorCalibration] Saving calibration results");
+  mc_rtc::log::info("[ForceSensorCalibration] Saving calibration results");
   const auto &calib_dir = ctl.robot().module().calib_dir;
   if(!bfs::exists(calib_dir))
   {
     if(bfs::create_directories(calib_dir))
     {
-      LOG_INFO("[ForceSensorCalibration] Created missing calibration directory " << calib_dir);
+      mc_rtc::log::info("[{}] Created missing calibration directory {}", name(), calib_dir);
     }
     else
     {
-      LOG_ERROR("[ForceSensorCalibration] Failed to create calibration directory " << calib_dir);
+      mc_rtc::log::error("[{}] Failed to create calibration directory {}", name(), calib_dir);
       return;
     }
   }
 
-  for(const auto & sensorP : sensors_)
+  for(const auto & sensor : sensors_)
   {
-    const auto & sensor = sensorP.first;
     const auto source_path = "/tmp/calib-force-sensors-result-"+ctl.robot().name() + "/" + std::string("calib_data." + sensor);
     const auto destination_path =  calib_dir + "/" + std::string("calib_data." + sensor);
     try
     {
       bfs::copy_file(source_path,destination_path, bfs::copy_option::overwrite_if_exists);
-      LOG_SUCCESS("[ForceSensorCalibration] Calibration file copied to " << destination_path);
+      mc_rtc::log::success("[ForceSensorCalibration] Calibration file copied to {}", destination_path);
     }
     catch(...)
     {
-      LOG_WARNING("[ForceSensorCalibration] Failed to save " << sensor << " calibration file to " << destination_path);
+      mc_rtc::log::warning("[ForceSensorCalibration] Failed to save {} calibration file to {}", sensor, destination_path);
     }
   }
 }
@@ -126,14 +134,14 @@ void CheckResults::saveCalibration(mc_control::fsm::Controller & ctl)
 
 void CheckResults::teardown(mc_control::fsm::Controller & ctl)
 {
-  for(const auto & sensorP : sensors_)
+  for(const auto & sensor : sensors_)
   {
-    const auto & sensor = sensorP.first;
     ctl.gui()->removePlot(sensor);
     ctl.gui()->removeElement({}, "Status");
     ctl.gui()->removeElement({}, "Save calibration");
     ctl.gui()->removeElement({}, "Finish without saving");
     ctl.gui()->removeElement({}, "Save and finish");
+    ctl.logger().removeLogEntry(sensor + "_calibrated");
   }
 }
 

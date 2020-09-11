@@ -13,10 +13,13 @@ struct ForceSensorCalibration_DLLAPI ForceSensorCalibration : public mc_control:
 
     void reset(const mc_control::ControllerResetData & reset_data) override;
 
-    std::vector<std::string> supported_robots() const override
-    {
-      return {"hrp5_p", "hrp2_drc", "hrp4"};
-    }
+    /**
+     * Do not create observers from global configuration.
+     * They will be created in the constructor according to the per-robot
+     * configuration instead
+     */
+    void createObserverPipelines(const mc_rtc::Configuration & config) override
+    {}
 
 private:
     mc_rtc::Configuration config_;

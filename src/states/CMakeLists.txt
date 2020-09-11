@@ -1,3 +1,4 @@
+add_fsm_state_simple(PressureCheck)
 add_fsm_state_simple(ChooseTransition)
 add_fsm_state_simple(ShowForces)
 add_fsm_state_simple(InitialPosture)
@@ -7,3 +8,5 @@ add_fsm_state_simple(RunCalibrationScript)
 add_fsm_state_simple(CheckResults)
 
 add_fsm_data_directory(data)
+
+target_include_directories(RunCalibrationScript PRIVATE "${PROJECT_BINARY_DIR}/src")

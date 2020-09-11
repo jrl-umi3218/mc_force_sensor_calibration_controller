@@ -9,6 +9,7 @@ using Style = mc_rtc::gui::plot::Style;
 void ShowForces::configure(const mc_rtc::Configuration & config)
 {
   config("category", category_);
+  config("forceScale", forceScale_);
 }
 
 
@@ -40,13 +41,12 @@ void ShowForces::addWrenchWithoutGravityPlot(const std::string & name, const std
     plot::Y(name+ " (y)", [&robot, &fs, surface]() { return robot.surfaceWrench(surface).force().y(); }, Color::Green, Style::Dashed),
     plot::Y(name+ " (z)", [&robot, &fs, surface]() { return robot.surfaceWrench(surface).force().z(); }, Color::Blue, Style::Dashed));
   plots_.push_back(name);
-
 }
 
 void ShowForces::addWrenchVector(const std::string & name, mc_rtc::gui::StateBuilder & gui, const mc_rbdyn::Robot & robot, const mc_rbdyn::ForceSensor & fs)
 {
   gui.addElement(category_,
-                 Force(name,
+                 Force(name, forceConfig_,
                        [&fs]()
                        {
                         return fs.wrench();
@@ -60,7 +60,7 @@ void ShowForces::addWrenchVector(const std::string & name, mc_rtc::gui::StateBui
 void ShowForces::addWrenchWithoutGravityVector(const std::string & name, mc_rtc::gui::StateBuilder & gui, const mc_rbdyn::Robot & robot, const mc_rbdyn::ForceSensor & fs)
 {
   gui.addElement(category_,
-                 Force(name,
+                 Force(name, forceConfig_,
                        [&fs, &robot]()
                        {
                         return fs.wrenchWithoutGravity(robot);
@@ -74,7 +74,7 @@ void ShowForces::addWrenchWithoutGravityVector(const std::string & name, mc_rtc:
 void ShowForces::addWrenchWithoutGravityVector(const std::string & name, const std::string & surface, mc_rtc::gui::StateBuilder & gui, const mc_rbdyn::Robot & robot, const mc_rbdyn::ForceSensor & fs)
 {
   gui.addElement(category_,
-                 Force(name,
+                 Force(name, forceConfig_,
                        [&fs, &robot, surface]()
                        {
                         return robot.surfaceWrench(surface);
@@ -89,6 +89,14 @@ void ShowForces::start(mc_control::fsm::Controller & ctl)
 {
   auto & robot = ctl.robot();
 
+  ctl.gui()->addElement(category_,
+                        Button("Stop",
+                               [this]()
+                               {
+                                stop_ = true;
+                               }));
+
+  forceConfig_.force_scale *= forceScale_;
   for(const auto & fs : robot.forceSensors())
   {
     const auto & name = fs.name();
@@ -153,7 +161,8 @@ void ShowForces::start(mc_control::fsm::Controller & ctl)
     {
       try
       {
-        const auto & fs = robot.findBodyForceSensor(surface.second->bodyName());
+        const auto & body = surface.second->bodyName();
+        const auto & fs = robot.bodyHasForceSensor(body) ? robot.bodyForceSensor(body) : robot.indirectBodyForceSensor(body);
         if(fs.name() == name)
         {
           surfaces.push_back(surface.first);
@@ -173,7 +182,7 @@ void ShowForces::start(mc_control::fsm::Controller & ctl)
                                                         },
                                                         [this, name](const std::string & surface)
                                                         {
-                                                          LOG_INFO("[ShowForces] Surface " << surface << " selected");
+                                                          mc_rtc::log::info("[ShowForces] Surface {} selected", surface);
                                                           surfaces_[name] = surface;
                                                         }));
 //mc  _rtc::gui::FormDataComboInput{"R0 surface", false, {"surfaces", "$R0"}},
@@ -211,11 +220,12 @@ void ShowForces::start(mc_control::fsm::Controller & ctl)
 bool ShowForces::run(mc_control::fsm::Controller & ctl_)
 {
   t_ += ctl_.timeStep;
-  return true;
+  return stop_;
 }
 
 void ShowForces::teardown(mc_control::fsm::Controller & ctl)
 {
+  ctl.gui()->removeElement(category_, "Stop");
   for(const auto & plot : plots_)
   {
     ctl.gui()->removePlot(plot);
