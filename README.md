@@ -71,9 +71,9 @@ Adding your own robot
 To add your own robot, you should add an additional section with the same name as that of your robot in `etc/ForceSensorCalibration.in.yaml` and sumbit a pull request. Here is a brief summary of the yaml configuration parameters.
 
 - `ObserverPipelines`: a state observation pipeline see [here](https://jrl-umi3218.github.io/mc_rtc/json.html#Observers/ObserverPipelines) for supported options. The calibration method requires the orientation of force sensors w.r.t gravity to be known. For floating base robots this means that you need to know at least the orientation of the floating base w.r.t gravity (roll/pitch), and the joint position in order to compute the sensor frame orientation from kinematics.
-- `forceSensors`: Vector of force sensor names to calibre
-- `maxPressureThreshold`: Threshold used to detect whether the links attached to each sensor might be in contact with the environment and prevents the calibration motion.
-- `initial_posture`: Robot posture from which the calibration motion starts.
+- `forceSensors`: Vector of force sensor names to calibrate
+- `maxPressureThreshold`: Prevent calibration motion if any of the force sensors measures more than this threhold (norm of force).
+- `initial_posture`: Initial robot posture from which the calibration motion starts.
   ```yaml
   initial_posture:
     completion:
