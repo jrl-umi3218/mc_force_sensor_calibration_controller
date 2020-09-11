@@ -85,7 +85,7 @@ struct Minimize
   }
 };
 
-CalibrationResult calibrate(const mc_rbdyn::Robot & robot, const std::string & sensorN, const Measurements & measurements)
+CalibrationResult calibrate(const mc_rbdyn::Robot & robot, const std::string & sensorN, const Measurements & measurements, bool verbose)
 {
   CalibrationResult result;
   const auto & sensor = robot.forceSensor(sensorN);
@@ -116,19 +116,25 @@ CalibrationResult calibrate(const mc_rbdyn::Robot & robot, const std::string & s
   // Run the solver!
   ceres::Solver::Options options;
   options.linear_solver_type = ceres::DENSE_QR;
-  options.minimizer_progress_to_stdout = true;
+  options.minimizer_progress_to_stdout = verbose;
   options.max_num_iterations = 1000;
   ceres::Solver::Summary summary;
   Solve(options, &problem, &summary);
   result.success = summary.IsSolutionUsable();
 
-  std::cout << summary.BriefReport() << "\n";
-  std::cout << "success: " << result.success << "\n";
-  std::cout << "mass: " << result.mass << "\n";
-  std::cout << "result.rpy: " << result.rpy[0] << ", " << result.rpy[1] << ", " << result.rpy[2] << "\n";
-  std::cout << "result.com: " << result.com[0] << ", " << result.com[1] << ", " << result.com[2] << "\n";
-  std::cout << "result.offset: " << result.offset[0] << ", " << result.offset[1] << ", " << result.offset[2] << ", " << result.offset[3] << ", "
-            << result.offset[4] << ", " << result.offset[5] << "\n";
+  mc_rtc::log::info(
+R"({},
+success     : {}
+mass        : {}
+rpy         : {}, {}, {}
+com         : {}, {}, {}
+force offset: {}, {}, {}, {}, {}, {})",
+summary.BriefReport(),
+result.success,
+result.mass,
+result.rpy[0], result.rpy[1], result.rpy[2],
+result.com[0], result.com[1], result.com[2],
+result.offset[0], result.offset[1], result.offset[2], result.offset[3], result.offset[4], result.offset[5]);
   return result;
 }
 

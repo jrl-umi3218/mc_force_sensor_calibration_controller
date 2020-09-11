@@ -11,4 +11,4 @@ struct CalibrationResult
   double offset[6] = {0};
 };
 
-CalibrationResult calibrate(const mc_rbdyn::Robot & robot, const std::string & sensor, const Measurements & measurements);
+CalibrationResult calibrate(const mc_rbdyn::Robot & robot, const std::string & sensor, const Measurements & measurements, bool verbose = false);

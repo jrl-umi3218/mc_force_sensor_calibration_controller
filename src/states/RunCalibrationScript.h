@@ -23,5 +23,5 @@ private:
     std::atomic<bool> completed_{false};
     bool success_ = true;
     std::string outputPath_;
-    std::vector<std::pair<std::string, std::string>> sensors_;
+    std::vector<std::string> sensors_;
 };

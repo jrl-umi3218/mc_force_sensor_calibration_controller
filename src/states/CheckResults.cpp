@@ -35,9 +35,8 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
   }
 
   // Load new calibration parameters
-  for(const auto & sensorP : sensors_)
+  for(const auto & sensorN : sensors_)
   {
-    auto sensorN = sensorP.first;
     const auto filename = calib_path+"/calib_data."+sensorN;
     mc_rtc::log::info("[{}] Loading calibration file {}", name(), filename);
     auto & sensor = ctl.robot().forceSensor(sensorN);
@@ -116,9 +115,8 @@ void CheckResults::saveCalibration(mc_control::fsm::Controller & ctl)
     }
   }
 
-  for(const auto & sensorP : sensors_)
+  for(const auto & sensor : sensors_)
   {
-    const auto & sensor = sensorP.first;
     const auto source_path = "/tmp/calib-force-sensors-result-"+ctl.robot().name() + "/" + std::string("calib_data." + sensor);
     const auto destination_path =  calib_dir + "/" + std::string("calib_data." + sensor);
     try
@@ -136,9 +134,8 @@ void CheckResults::saveCalibration(mc_control::fsm::Controller & ctl)
 
 void CheckResults::teardown(mc_control::fsm::Controller & ctl)
 {
-  for(const auto & sensorP : sensors_)
+  for(const auto & sensor : sensors_)
   {
-    const auto & sensor = sensorP.first;
     ctl.gui()->removePlot(sensor);
     ctl.gui()->removeElement({}, "Status");
     ctl.gui()->removeElement({}, "Save calibration");

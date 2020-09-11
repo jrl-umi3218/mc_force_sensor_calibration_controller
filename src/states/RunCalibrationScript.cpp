@@ -9,8 +9,6 @@ namespace bfs = boost::filesystem;
 #include "../ForceSensorCalibration.h"
 #include "../calibrate.h"
 
-#include "config.h"
-
 RunCalibrationScript::~RunCalibrationScript()
 {
   th_.join();
@@ -36,18 +34,19 @@ void RunCalibrationScript::start(mc_control::fsm::Controller & ctl_)
   }
 
   sensors_ = robotConf("forceSensors");
+  bool verbose = robotConf("verboseSolver", false);
   auto & measurements = ctl_.datastore().get<SensorMeasurements>("measurements");
-  th_ = std::thread([&,this]() {
+  th_ = std::thread([&,verbose,this]() {
     for(const auto & s : sensors_)
     {
-      mc_rtc::log::info("Start calibration optimization for {}", s.first);
-      auto result = calibrate(ctl_.robot(), s.first, measurements.at(s.first));
+      mc_rtc::log::info("Start calibration optimization for {}", s);
+      auto result = calibrate(ctl_.robot(), s, measurements.at(s), verbose);
       success_ = result.success && success_;
       if(result.success)
       {
-        mc_rtc::log::success("Calibration succeeded for {}", s.first);
+        mc_rtc::log::success("Calibration succeeded for {}", s);
         bfs::path out(outputPath_);
-        out += "/calib_data." + s.first;
+        out += "/calib_data." + s;
         std::ofstream ofs(out.string());
         if(!ofs.good())
         {
@@ -71,7 +70,7 @@ void RunCalibrationScript::start(mc_control::fsm::Controller & ctl_)
       }
       else
       {
-        mc_rtc::log::error("Calibration failed for {}", s.first);
+        mc_rtc::log::error("Calibration failed for {}", s);
       }
     }
     completed_ = true;

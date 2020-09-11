@@ -8,6 +8,8 @@
 #include "../ForceSensorCalibration.h"
 #include "../Measurement.h"
 
+namespace bfs = boost::filesystem;
+
 void CalibrationMotionLogging::start(mc_control::fsm::Controller & ctl_)
 {
   auto & ctl = static_cast<ForceSensorCalibration &>(ctl_);
@@ -22,7 +24,7 @@ void CalibrationMotionLogging::start(mc_control::fsm::Controller & ctl_)
     mc_rtc::log::error_and_throw<std::runtime_error>("Calibration controller expects a forceSensors entry");
   }
   sensors_ = robotConf("forceSensors");
-  std::string outputPath_ = "/tmp/calib-force-sensors-data-" + robot.name();
+  auto outputPath_ = (bfs::temp_directory_path() / fmt::format("calib-force-sensors-data-{}", robot.name())).string();
 
   // Attempt to create the output files
   if(!boost::filesystem::exists(outputPath_))
@@ -41,12 +43,12 @@ void CalibrationMotionLogging::start(mc_control::fsm::Controller & ctl_)
   measurements.clear();
   for(const auto & s : sensors_)
   {
-    measurements[s.first] = {};
-    measurementsCount_[s.first] = {0, 0};
+    measurements[s] = {};
+    measurementsCount_[s] = {0, 0};
     if(singularityThreshold_ > 0)
     {
-      const auto & sensor = ctl_.robot().forceSensor(s.first);
-      jacobians_[s.first] = {ctl_.robot(), sensor.parentBody()};
+      const auto & sensor = ctl_.robot().forceSensor(s);
+      jacobians_[s] = {ctl_.robot(), sensor.parentBody()};
     }
   }
 }
@@ -59,25 +61,25 @@ bool CalibrationMotionLogging::run(mc_control::fsm::Controller & ctl_)
   auto & measurements = ctl_.datastore().get<SensorMeasurements>("measurements");
   for(const auto & s : sensors_)
   {
-    const auto & sensor = robot.forceSensor(s.first);
+    const auto & sensor = robot.forceSensor(s);
     const auto & X_0_p = real.bodyPosW()[real.bodyIndexByName(sensor.parentBody())];
     const auto & measure = sensor.wrench();
-    measurementsCount_[s.first].second++;
+    measurementsCount_[s].second++;
     if(singularityThreshold_ > 0)
     {
-      auto & j = jacobians_[s.first];
+      auto & j = jacobians_[s];
       const auto & jacMat = j.jacobian.jacobian(robot.mb(), robot.mbc());
       j.svd.compute(jacMat);
-      if(j.svd.singularValues().tail(1)(0) > 0.08)
+      if(j.svd.singularValues().tail(1)(0) > singularityThreshold_)
       {
-        measurements[s.first].push_back({X_0_p, measure});
-        measurementsCount_[s.first].first++;
+        measurements[s].push_back({X_0_p, measure});
+        measurementsCount_[s].first++;
       }
     }
     else
     {
-      measurements[s.first].push_back({X_0_p, measure});
-      measurementsCount_[s.first].first++;
+      measurements[s].push_back({X_0_p, measure});
+      measurementsCount_[s].first++;
     }
   }
   output("OK");

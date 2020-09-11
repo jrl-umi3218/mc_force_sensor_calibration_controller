@@ -20,8 +20,8 @@ struct CalibrationMotionLogging : mc_control::fsm::State
     void teardown(mc_control::fsm::Controller & ctl) override;
 
 private:
-    // pair of sensor (name, logging alias) */
-    std::vector<std::pair<std::string, std::string>> sensors_;
+    // sensor to calibrate
+    std::vector<std::string> sensors_;
     // For each sensor store the jacobian and its decomposition
     struct Jacobian
     {

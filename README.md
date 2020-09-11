@@ -11,7 +11,7 @@ Robots currently supported:
 - `JVRC1`
 - `panda_default`
 
-To add your own robot, define the appropriate configuration in `etc/ForceSensorCalibration.in.yaml` and sumbit a pull request.
+To add your own robot, see the [Adding your own robot/configuration](#adding-your-own-robot) section below.
 
 Requirements
 ==
@@ -19,7 +19,7 @@ Requirements
 Running this controller requires:
 - [Ceres library](https://github.com/ceres-solver/ceres-solver)
 - [mc_rtc](https://github.com/jrl-umi3218/mc_rtc)
-
+- `C++14`
 
 How to use
 ==
@@ -35,7 +35,7 @@ Enabled: ForceSensorCalibration
   - If the test fails, it'll display a message in the GUI. Click on `Continue` once the robot is in the air
 - Then you will be presented with a `Calibration` tab in the GUI:
   - **Start calibration**: perform the calibration motion (going to an initial posture, and making each sensor move simultaneously. Once the motion is completed, it'll run the calibration optimization, and move to the next `Check calibration` state
-  - **Check calibration**: loads the calibration results, perform the calibration motion again and displays live plots of the results. The calibrated force is expected to be close to `0N`. You can either save the current calibration results if you are satisfied using `Save calibration` or `Save and finish`, or stop without keeping the calibration results using `Finish without saving`
+  - **Check calibration**: loads the calibration results, perform the calibration motion again and displays live plots of the results. The calibrated force is expected to be close to `0N`. You can either save the current calibration results if you are satisfied using `Save calibration` or `Save and finish`, or stop without keeping the calibration results using `Finish without saving`. Note that saving might fail if you don't have the writing rights to the calibration directory.
   - **Show forces**: offers a GUI tab to display forces as arrows/live plots
   - Once the check calibration state is finished, the robot will go back to halfsitting.
   - If there is an error, the robot will go back to halfsitting.
@@ -64,3 +64,41 @@ Currently the real HRP4 has a force sensor with reading flipped along one of its
 
 - Real
   - Use `HRP4Comanoid` robot module
+
+Adding your own robot
+==
+
+To add your own robot, you should add an additional section with the same name as that of your robot in `etc/ForceSensorCalibration.in.yaml` and sumbit a pull request. Here is a brief summary of the yaml configuration parameters.
+
+- `ObserverPipelines`: a state observation pipeline see [here](https://jrl-umi3218.github.io/mc_rtc/json.html#Observers/ObserverPipelines) for supported options. The calibration method requires the orientation of force sensors w.r.t gravity to be known. For floating base robots this means that you need to know at least the orientation of the floating base w.r.t gravity (roll/pitch), and the joint position in order to compute the sensor frame orientation from kinematics.
+- `forceSensors`: Vector of force sensor names to calibre
+- `maxPressureThreshold`: Threshold used to detect whether the links attached to each sensor might be in contact with the environment and prevents the calibration motion.
+- `initial_posture`: Robot posture from which the calibration motion starts.
+  ```yaml
+  initial_posture:
+    completion:
+      eval: 0.06
+    target:
+      L_HIP_R: [0.25]
+      R_HIP_R: [-0.25]
+  ```
+- `motion`: The calibration motion should move the joints prior to the force sensor and attempt to put the force sensor in as many orientations as possible. This section makes each joint move in a sinusoidal motion within the joint limits (or subrange of).
+  ```yaml
+  motion:
+    duration: 30
+    stiffness: 10  # posture task stiffness
+    percentLimits: 0.8  # percentage of joint limits for all joints
+    joints:
+    - name: R_ANKLE_P
+      period: 10
+    - name: L_ANKLE_P
+      period: 15
+    - name: R_ANKLE_R
+      period: 10
+      percentLimits: 0.5 # per-joint limits (optional)
+    - name: L_ANKLE_R
+      period: 15
+  ```
+- `verboseSolver` [default=`false`]: When true show per-iteration results of the solver
+- `SinglularityThreshold`: Prevents singular configuration (useful for fixed-based robots)
+  - `0` disables this feature
