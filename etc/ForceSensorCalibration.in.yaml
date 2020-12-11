@@ -207,7 +207,7 @@ hrp5_p:
   motion:
     duration: 30
     stiffness: 10
-    percentLimits: 0.8
+    percentLimits: 0.95
     joints:
       # Left wrist
     - name: LWRR
