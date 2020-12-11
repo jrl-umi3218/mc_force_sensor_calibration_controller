@@ -50,7 +50,7 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
 
     if(start < lower || start > upper)
     {
-      mc_rtc::log::error("[{}] Starting joint configuration of joint {} [{}] is outside of the reduced limit range [{}, {}] (percentLimits: {}, actual joint limits: [{}, {}]", this->name(), name, start, lower, upper, actualLower, actualUpper);
+      mc_rtc::log::error("[{}] Starting joint configuration of joint {} [{}] is outside of the reduced limit range [{}, {}] (percentLimits: {}, actual joint limits: [{}, {}]", this->name(), name, start, lower, upper, percentLimits, actualLower, actualUpper);
       output("FAILURE");
     }
 
