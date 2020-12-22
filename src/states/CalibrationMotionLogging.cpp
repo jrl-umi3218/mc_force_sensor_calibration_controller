@@ -53,7 +53,6 @@ void CalibrationMotionLogging::start(mc_control::fsm::Controller & ctl_)
   }
 }
 
-
 bool CalibrationMotionLogging::run(mc_control::fsm::Controller & ctl_)
 {
   auto & robot = ctl_.robot();

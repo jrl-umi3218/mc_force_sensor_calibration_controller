@@ -1,14 +1,10 @@
 #include "CalibrationMotion.h"
-#include "../ForceSensorCalibration.h"
 #include <mc_filter/utils/clamp.h>
-
+#include "../ForceSensorCalibration.h"
 
 void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
 {
-  ctl.datastore().make_call("CalibrationMotion::Stop", [this]()
-                            {
-                              interrupted_ = true;
-                            });
+  ctl.datastore().make_call("CalibrationMotion::Stop", [this]() { interrupted_ = true; });
   auto & robot = ctl.robot();
   auto robotConf = ctl.config()(robot.name());
   if(!robotConf.has("motion"))
@@ -45,51 +41,38 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
 
     // Reduced range
     const auto range = percentLimits * actualRange;
-    const auto lower = actualLower + (actualRange - range)/2;
-    const auto upper = actualUpper - (actualRange - range)/2;
+    const auto lower = actualLower + (actualRange - range) / 2;
+    const auto upper = actualUpper - (actualRange - range) / 2;
 
     if(start < lower || start > upper)
     {
-      mc_rtc::log::error("[{}] Starting joint configuration of joint {} [{}] is outside of the reduced limit range [{}, {}] (percentLimits: {}, actual joint limits: [{}, {}]", this->name(), name, start, lower, upper, percentLimits, actualLower, actualUpper);
+      mc_rtc::log::error("[{}] Starting joint configuration of joint {} [{}] is outside of the reduced limit range "
+                         "[{}, {}] (percentLimits: {}, actual joint limits: [{}, {}]",
+                         this->name(), name, start, lower, upper, percentLimits, actualLower, actualUpper);
       output("FAILURE");
     }
 
     // compute the starting time such that the joint does not move initially
     // that is such that f(start_dt) = start
     // i.e start_dt = f^(-1)(start)
-    double start_dt = period * (acos(sqrt(start - lower)/sqrt(upper-lower))) / PI;
+    double start_dt = period * (acos(sqrt(start - lower) / sqrt(upper - lower))) / PI;
     jointUpdates_.emplace_back(
-      /* f(t): periodic function that moves the joint between its limits */
-      [this, postureTask, lower, upper, start_dt, period, name]()
-      {
-        auto t = start_dt + dt_;
-        auto q = lower + (upper-lower) * (1 + cos((2*PI*t)/period)) / 2;
-        postureTask->target({{name, {q}}});
-      }
-    );
+        /* f(t): periodic function that moves the joint between its limits */
+        [this, postureTask, lower, upper, start_dt, period, name]() {
+          auto t = start_dt + dt_;
+          auto q = lower + (upper - lower) * (1 + cos((2 * PI * t) / period)) / 2;
+          postureTask->target({{name, {q}}});
+        });
   }
 
-  ctl.gui()->addElement({},
-                         mc_rtc::gui::NumberSlider("Progress",
-                                                   [this]()
-                                                   {
-                                                    return dt_;
-                                                   },
-                                                   [](double)
-                                                   {
-                                                   },
-                                                   0,
-                                                   duration_),
-                         mc_rtc::gui::Button("Stop Motion",
-                                             [this]()
-                                             {
-                                              mc_rtc::log::warning("[{}] Motion was interrupted before it's planned duration ({:.2f}/{:.2f}s)", name(), dt_, duration_);
-                                              interrupted_ = true;
-                                             }
-                                            )
-                         );
+  ctl.gui()->addElement(
+      {}, mc_rtc::gui::NumberSlider("Progress", [this]() { return dt_; }, [](double) {}, 0, duration_),
+      mc_rtc::gui::Button("Stop Motion", [this]() {
+        mc_rtc::log::warning("[{}] Motion was interrupted before it's planned duration ({:.2f}/{:.2f}s)", name(), dt_,
+                             duration_);
+        interrupted_ = true;
+      }));
 }
-
 
 bool CalibrationMotion::run(mc_control::fsm::Controller & ctl_)
 {

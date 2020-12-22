@@ -4,7 +4,6 @@
 #include <mc_control/fsm/State.h>
 #include <fstream>
 
-
 struct PressureCheck : mc_control::fsm::State
 {
   void configure(const mc_rtc::Configuration & config) override {}
@@ -14,7 +13,7 @@ struct PressureCheck : mc_control::fsm::State
 
   void check(mc_control::fsm::Controller & ctl);
 
- protected:
+protected:
   bool success_ = false;
   double maxPressure_ = 50;
   std::vector<std::pair<std::string, std::string>> forceSensors_;

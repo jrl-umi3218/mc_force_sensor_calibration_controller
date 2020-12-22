@@ -2,9 +2,9 @@
 
 #include <ceres/ceres.h>
 
+#include <mc_rtc/constants.h>
 #include <RBDyn/FK.h>
 #include <SpaceVecAlg/SpaceVecAlg>
-#include <mc_rtc/constants.h>
 
 /** We redefined sva::Rot. functions to make them work with non-scalar types */
 
@@ -85,7 +85,10 @@ struct Minimize
   }
 };
 
-CalibrationResult calibrate(const mc_rbdyn::Robot & robot, const std::string & sensorN, const Measurements & measurements, bool verbose)
+CalibrationResult calibrate(const mc_rbdyn::Robot & robot,
+                            const std::string & sensorN,
+                            const Measurements & measurements,
+                            bool verbose)
 {
   CalibrationResult result;
   const auto & sensor = robot.forceSensor(sensorN);
@@ -101,17 +104,18 @@ CalibrationResult calibrate(const mc_rbdyn::Robot & robot, const std::string & s
     const auto & f = measurement.measure;
     ceres::CostFunction * cost_function =
         new ceres::AutoDiffCostFunction<CostFunctor, 6, 1, 3, 3, 6>(new CostFunctor(pos, f, sensor.X_p_f()));
-    problem.AddResidualBlock(cost_function, new ceres::CauchyLoss(0.5), &result.mass, result.rpy, result.com, result.offset);
+    problem.AddResidualBlock(cost_function, new ceres::CauchyLoss(0.5), &result.mass, result.rpy, result.com,
+                             result.offset);
   }
   ceres::CostFunction * min_rpy = new ceres::AutoDiffCostFunction<Minimize, 3, 3>(new Minimize());
   problem.AddResidualBlock(min_rpy, nullptr, result.rpy);
   problem.SetParameterLowerBound(&result.mass, 0, 0);
-  problem.SetParameterLowerBound(result.rpy, 0, -2*M_PI);
-  problem.SetParameterLowerBound(result.rpy, 1, -2*M_PI);
-  problem.SetParameterLowerBound(result.rpy, 2, -2*M_PI);
-  problem.SetParameterUpperBound(result.rpy, 0, 2*M_PI);
-  problem.SetParameterUpperBound(result.rpy, 1, 2*M_PI);
-  problem.SetParameterUpperBound(result.rpy, 2, 2*M_PI);
+  problem.SetParameterLowerBound(result.rpy, 0, -2 * M_PI);
+  problem.SetParameterLowerBound(result.rpy, 1, -2 * M_PI);
+  problem.SetParameterLowerBound(result.rpy, 2, -2 * M_PI);
+  problem.SetParameterUpperBound(result.rpy, 0, 2 * M_PI);
+  problem.SetParameterUpperBound(result.rpy, 1, 2 * M_PI);
+  problem.SetParameterUpperBound(result.rpy, 2, 2 * M_PI);
 
   // Run the solver!
   ceres::Solver::Options options;
@@ -122,6 +126,7 @@ CalibrationResult calibrate(const mc_rbdyn::Robot & robot, const std::string & s
   Solve(options, &problem, &summary);
   result.success = summary.IsSolutionUsable();
 
+  // clang-format off
   mc_rtc::log::info(
 R"({},
 success     : {}
@@ -129,12 +134,12 @@ mass        : {}
 rpy         : {}, {}, {}
 com         : {}, {}, {}
 force offset: {}, {}, {}, {}, {}, {})",
-summary.BriefReport(),
-result.success,
-result.mass,
-result.rpy[0], result.rpy[1], result.rpy[2],
-result.com[0], result.com[1], result.com[2],
-result.offset[0], result.offset[1], result.offset[2], result.offset[3], result.offset[4], result.offset[5]);
+      summary.BriefReport(),
+      result.success,
+      result.mass,
+      result.rpy[0], result.rpy[1], result.rpy[2],
+      result.com[0], result.com[1], result.com[2],
+      result.offset[0], result.offset[1], result.offset[2], result.offset[3], result.offset[4], result.offset[5]);
+  // clang-format on
   return result;
 }
-

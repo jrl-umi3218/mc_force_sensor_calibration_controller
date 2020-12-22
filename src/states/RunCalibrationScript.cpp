@@ -14,9 +14,7 @@ RunCalibrationScript::~RunCalibrationScript()
   th_.join();
 }
 
-void RunCalibrationScript::configure(const mc_rtc::Configuration &)
-{
-}
+void RunCalibrationScript::configure(const mc_rtc::Configuration &) {}
 
 void RunCalibrationScript::start(mc_control::fsm::Controller & ctl_)
 {
@@ -36,7 +34,7 @@ void RunCalibrationScript::start(mc_control::fsm::Controller & ctl_)
   sensors_ = robotConf("forceSensors");
   bool verbose = robotConf("verboseSolver", false);
   auto & measurements = ctl_.datastore().get<SensorMeasurements>("measurements");
-  th_ = std::thread([&,verbose,this]() {
+  th_ = std::thread([&, verbose, this]() {
     for(const auto & s : sensors_)
     {
       mc_rtc::log::info("Start calibration optimization for {}", s);
@@ -76,7 +74,6 @@ void RunCalibrationScript::start(mc_control::fsm::Controller & ctl_)
     completed_ = true;
   });
 }
-
 
 bool RunCalibrationScript::run(mc_control::fsm::Controller &)
 {
