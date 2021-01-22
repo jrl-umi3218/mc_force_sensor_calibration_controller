@@ -10,8 +10,13 @@ set(controller_HDR
 
 add_library(${PROJECT_NAME} SHARED ${controller_SRC} ${controller_HDR})
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-DForceSensorCalibration_EXPORTS")
-target_link_libraries(${PROJECT_NAME} PUBLIC mc_rtc::mc_control_fsm ${CERES_LIBRARIES})
-target_include_directories(${PROJECT_NAME} PUBLIC ${CERES_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PUBLIC mc_rtc::mc_control_fsm)
+if(TARGET Ceres::ceres)
+  target_link_libraries(${PROJECT_NAME} PUBLIC Ceres::ceres)
+else()
+  target_link_libraries(${PROJECT_NAME} PUBLIC ${CERES_LIBRARIES})
+  target_include_directories(${PROJECT_NAME} PUBLIC ${CERES_INCLUDE_DIRS})
+endif()
 install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION "${MC_RTC_LIBDIR}"
   LIBRARY DESTINATION "${MC_RTC_LIBDIR}"

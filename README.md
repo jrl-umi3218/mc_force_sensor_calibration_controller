@@ -18,6 +18,7 @@ Requirements
 
 Running this controller requires:
 - [Ceres library](https://github.com/ceres-solver/ceres-solver)
+  Note: On ubuntu 16.04 you need [ceres 1.14](https://github.com/ceres-solver/ceres-solver/tree/1.14.x)
 - [mc_rtc](https://github.com/jrl-umi3218/mc_rtc)
 - `C++14`
 
