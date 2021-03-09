@@ -35,24 +35,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-16.04, ubuntu-18.04, ubuntu-20.04, macos-latest, windows-latest]
+        os: [ubuntu-16.04, ubuntu-18.04, ubuntu-20.04]
         build-type: [RelWithDebInfo]
         compiler: [gcc, clang]
-        exclude:
-          # Only default compiler on macos-latest and windows-latest
-          - os: macos-latest
-            compiler: clang
-          - os: windows-latest
-            compiler: clang
 
     runs-on: ${{ matrix.os }}
     steps:
-    - name: Temporary APT mirrors cleanup
-      if: startsWith(runner.os, 'Linux')
-      run: |
-        set -e
-        sudo rm -f /etc/apt/sources.list.d/dotnetdev.list /etc/apt/sources.list.d/microsoft-prod.list
     - name: Setup multi-contact repositories
+      if: (matrix.os == 'ubuntu-16.04' || matrix.os == 'ubuntu-18.04' || matrix.os == 'ubuntu-20.04') 
       run: |
         # Make sure you have required tools
         sudo apt-get -qq install apt-transport-https lsb-release ca-certificates gnupg
@@ -65,16 +55,30 @@ jobs:
     - uses: actions/checkout@v1
       with:
         submodules: recursive
-    - name: Install dependencies
+    - name: Install system dependencies
       uses: jrl-umi3218/github-actions/install-dependencies@master
       with:
         compiler: ${{ matrix.compiler }}
         build-type: ${{ matrix.build-type }}
         ubuntu: |
-          apt: libeigen3-dev doxygen doxygen-latex libboost-all-dev libmc-rtc-dev
+          apt: libeigen3-dev libgflags-dev libgoogle-glog-dev libatlas-base-dev doxygen doxygen-latex libboost-all-dev libmc-rtc-dev
+    - name: Install Ceres
+      uses: jrl-umi3218/github-actions/install-dependencies@master
+      if: matrix.os != 'ubuntu-16.04'
+      with:
+        compiler: ${{ matrix.compiler }}
+        build-type: ${{ matrix.build-type }}
         github: |
           - path: ceres-solver/ceres-solver
-            ref: 2.0.0
+    - name: Install Ceres 1.14 (Ubuntu 16.04)
+      uses: jrl-umi3218/github-actions/install-dependencies@master
+      if: matrix.os == 'ubuntu-16.04'
+      with:
+        compiler: ${{ matrix.compiler }}
+        build-type: ${{ matrix.build-type }}
+        github: |
+          - path: ceres-solver/ceres-solver
+            ref: 1.14.x
     - name: Build and test
       uses: jrl-umi3218/github-actions/build-cmake-project@master
       with:
