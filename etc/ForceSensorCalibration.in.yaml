@@ -186,6 +186,57 @@ hrp4j:
     - name: L_ANKLE_R
       period: 15
 
+hrp4cr:
+  ObserverPipelines: *observers
+  forceSensors:
+  - LeftHandForceSensor
+  - RightHandForceSensor
+  - LeftFootForceSensor
+  - RightFootForceSensor
+  maxPressureThreshold: 50
+  initial_posture:
+    completion:
+      eval: 0.06
+    target:
+      ## Arms
+      R_SHOULDER_P: [-0.4]
+      L_SHOULDER_P: [-0.4]
+      R_SHOULDER_R: [-0.5]
+      L_SHOULDER_R: [0.5]
+      R_ELBOW_P: [-1.5]
+      L_ELBOW_P: [-1.5]
+      ## Legs
+      L_HIP_R: [0.25]
+      R_HIP_R: [-0.25]
+  motion:
+    duration: 30
+    stiffness: 10
+    percentLimits: 0.8
+    joints:
+      # Left wrist
+    - name: L_WRIST_P
+      period: 10
+    - name: L_WRIST_R
+      period: 16
+    - name: L_WRIST_Y
+      period: 20
+      # right wrist
+    - name: R_WRIST_P
+      period: 10
+    - name: R_WRIST_R
+      period: 16
+    - name: R_WRIST_Y
+      period: 20
+      ## Legs
+    - name: R_ANKLE_P
+      period: 10
+    - name: L_ANKLE_P
+      period: 15
+    - name: R_ANKLE_R
+      period: 10
+    - name: L_ANKLE_R
+      period: 15
+
 hrp5_p:
   ObserverPipelines: *observers
   forceSensors:
