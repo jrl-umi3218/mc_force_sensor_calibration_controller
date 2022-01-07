@@ -35,24 +35,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-16.04, ubuntu-18.04, ubuntu-20.04]
+        os: [ubuntu-18.04, ubuntu-20.04]
         build-type: [RelWithDebInfo]
         compiler: [gcc, clang]
 
     runs-on: ${{ matrix.os }}
     steps:
-    - name: Setup multi-contact repositories
-      if: (matrix.os == 'ubuntu-16.04' || matrix.os == 'ubuntu-18.04' || matrix.os == 'ubuntu-20.04') 
-      run: |
-        # Make sure you have required tools
-        sudo apt-get -qq install apt-transport-https lsb-release ca-certificates gnupg
-        # Add our key
-        sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key 892EA6EE273707C6495A6FB6220D644C64666806
-        # Add our repository (head versions)
-        sudo sh -c 'echo "deb https://dl.bintray.com/gergondet/multi-contact-head $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/multi-contact.list'
-        # Update packages list
-        sudo apt-get -qq update
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
       with:
         submodules: recursive
     - name: Install system dependencies
@@ -62,23 +51,11 @@ jobs:
         build-type: ${{ matrix.build-type }}
         ubuntu: |
           apt: libeigen3-dev libgflags-dev libgoogle-glog-dev libatlas-base-dev doxygen doxygen-latex libboost-all-dev libmc-rtc-dev
-    - name: Install Ceres
-      uses: jrl-umi3218/github-actions/install-dependencies@master
-      if: matrix.os != 'ubuntu-16.04'
-      with:
-        compiler: ${{ matrix.compiler }}
-        build-type: ${{ matrix.build-type }}
+          apt-mirrors:
+            mc-rtc:
+              cloudsmith: mc-rtc/head
         github: |
           - path: ceres-solver/ceres-solver
-    - name: Install Ceres 1.14 (Ubuntu 16.04)
-      uses: jrl-umi3218/github-actions/install-dependencies@master
-      if: matrix.os == 'ubuntu-16.04'
-      with:
-        compiler: ${{ matrix.compiler }}
-        build-type: ${{ matrix.build-type }}
-        github: |
-          - path: ceres-solver/ceres-solver
-            ref: 1.14.x
     - name: Build and test
       uses: jrl-umi3218/github-actions/build-cmake-project@master
       with:
