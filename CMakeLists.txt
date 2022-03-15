@@ -7,7 +7,13 @@ set(PROJECT_NAME ForceSensorCalibration)
 set(PROJECT_DESCRIPTION "ForceSensorCalibration")
 set(PROJECT_URL "")
 
-project(${PROJECT_NAME} CXX)
+project(${PROJECT_NAME} VERSION 1.0.0 LANGUAGES CXX)
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting default build type to RelWithDebInfo as none was provided")
+  set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Choose the type of a build" FORCE)
+endif()
+
 
 find_package(mc_rtc REQUIRED)
 find_package(Ceres REQUIRED)
