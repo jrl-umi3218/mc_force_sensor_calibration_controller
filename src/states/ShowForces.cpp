@@ -17,9 +17,12 @@ void ShowForces::addWrenchPlot(const std::string & name,
                                const mc_rbdyn::ForceSensor & fs)
 {
   gui.addPlot(name, plot::X("t", [this]() { return t_; }),
-              plot::Y(name + " (x)", [&fs]() { return fs.wrench().force().x(); }, Color::Red, Style::Dashed),
-              plot::Y(name + " (y)", [&fs]() { return fs.wrench().force().y(); }, Color::Green, Style::Dashed),
-              plot::Y(name + " (z)", [&fs]() { return fs.wrench().force().z(); }, Color::Blue, Style::Dashed));
+              plot::Y(
+                  name + " (x)", [&fs]() { return fs.wrench().force().x(); }, Color::Red, Style::Dashed),
+              plot::Y(
+                  name + " (y)", [&fs]() { return fs.wrench().force().y(); }, Color::Green, Style::Dashed),
+              plot::Y(
+                  name + " (z)", [&fs]() { return fs.wrench().force().z(); }, Color::Blue, Style::Dashed));
   plots_.push_back(name);
 }
 
@@ -29,12 +32,15 @@ void ShowForces::addWrenchWithoutGravityPlot(const std::string & name,
                                              const mc_rbdyn::ForceSensor & fs)
 {
   gui.addPlot(name, plot::X("t", [this]() { return t_; }),
-              plot::Y(name + " (x)", [&robot, &fs]() { return fs.wrenchWithoutGravity(robot).force().x(); }, Color::Red,
-                      Style::Dashed),
-              plot::Y(name + " (y)", [&robot, &fs]() { return fs.wrenchWithoutGravity(robot).force().y(); },
-                      Color::Green, Style::Dashed),
-              plot::Y(name + " (z)", [&robot, &fs]() { return fs.wrenchWithoutGravity(robot).force().z(); },
-                      Color::Blue, Style::Dashed));
+              plot::Y(
+                  name + " (x)", [&robot, &fs]() { return fs.wrenchWithoutGravity(robot).force().x(); }, Color::Red,
+                  Style::Dashed),
+              plot::Y(
+                  name + " (y)", [&robot, &fs]() { return fs.wrenchWithoutGravity(robot).force().y(); }, Color::Green,
+                  Style::Dashed),
+              plot::Y(
+                  name + " (z)", [&robot, &fs]() { return fs.wrenchWithoutGravity(robot).force().z(); }, Color::Blue,
+                  Style::Dashed));
   plots_.push_back(name);
 }
 
@@ -45,12 +51,15 @@ void ShowForces::addWrenchWithoutGravityPlot(const std::string & name,
                                              const mc_rbdyn::ForceSensor & fs)
 {
   gui.addPlot(name, plot::X("t", [this]() { return t_; }),
-              plot::Y(name + " (x)", [&robot, &fs, surface]() { return robot.surfaceWrench(surface).force().x(); },
-                      Color::Red, Style::Dashed),
-              plot::Y(name + " (y)", [&robot, &fs, surface]() { return robot.surfaceWrench(surface).force().y(); },
-                      Color::Green, Style::Dashed),
-              plot::Y(name + " (z)", [&robot, &fs, surface]() { return robot.surfaceWrench(surface).force().z(); },
-                      Color::Blue, Style::Dashed));
+              plot::Y(
+                  name + " (x)", [&robot, &fs, surface]() { return robot.surfaceWrench(surface).force().x(); },
+                  Color::Red, Style::Dashed),
+              plot::Y(
+                  name + " (y)", [&robot, &fs, surface]() { return robot.surfaceWrench(surface).force().y(); },
+                  Color::Green, Style::Dashed),
+              plot::Y(
+                  name + " (z)", [&robot, &fs, surface]() { return robot.surfaceWrench(surface).force().z(); },
+                  Color::Blue, Style::Dashed));
   plots_.push_back(name);
 }
 
@@ -59,8 +68,9 @@ void ShowForces::addWrenchVector(const std::string & name,
                                  const mc_rbdyn::Robot & robot,
                                  const mc_rbdyn::ForceSensor & fs)
 {
-  gui.addElement(category_, Force(name, forceConfig_, [&fs]() { return fs.wrench(); },
-                                  [&fs, &robot]() { return fs.X_0_f(robot); }));
+  gui.addElement(category_,
+                 Force(
+                     name, forceConfig_, [&fs]() { return fs.wrench(); }, [&fs, &robot]() { return fs.X_0_f(robot); }));
 }
 
 void ShowForces::addWrenchWithoutGravityVector(const std::string & name,
@@ -68,8 +78,9 @@ void ShowForces::addWrenchWithoutGravityVector(const std::string & name,
                                                const mc_rbdyn::Robot & robot,
                                                const mc_rbdyn::ForceSensor & fs)
 {
-  gui.addElement(category_, Force(name, forceConfig_, [&fs, &robot]() { return fs.wrenchWithoutGravity(robot); },
-                                  [&fs, &robot]() { return fs.X_0_f(robot); }));
+  gui.addElement(category_, Force(
+                                name, forceConfig_, [&fs, &robot]() { return fs.wrenchWithoutGravity(robot); },
+                                [&fs, &robot]() { return fs.X_0_f(robot); }));
 }
 
 void ShowForces::addWrenchWithoutGravityVector(const std::string & name,
@@ -78,8 +89,9 @@ void ShowForces::addWrenchWithoutGravityVector(const std::string & name,
                                                const mc_rbdyn::Robot & robot,
                                                const mc_rbdyn::ForceSensor & fs)
 {
-  gui.addElement(category_, Force(name, forceConfig_, [&fs, &robot, surface]() { return robot.surfaceWrench(surface); },
-                                  [&fs, &robot, surface]() { return robot.surfacePose(surface); }));
+  gui.addElement(category_, Force(
+                                name, forceConfig_, [&fs, &robot, surface]() { return robot.surfaceWrench(surface); },
+                                [&fs, &robot, surface]() { return robot.surfacePose(surface); }));
 }
 
 void ShowForces::start(mc_control::fsm::Controller & ctl)
@@ -143,12 +155,12 @@ void ShowForces::start(mc_control::fsm::Controller & ctl)
     if(surfaces.size())
     {
       surfaces_[name] = surfaces.front();
-      ctl.gui()->addElement(fsCategory,
-                            mc_rtc::gui::ComboInput("Surface", surfaces, [this, name]() { return surfaces_[name]; },
-                                                    [this, name](const std::string & surface) {
-                                                      mc_rtc::log::info("[ShowForces] Surface {} selected", surface);
-                                                      surfaces_[name] = surface;
-                                                    }));
+      ctl.gui()->addElement(fsCategory, mc_rtc::gui::ComboInput(
+                                            "Surface", surfaces, [this, name]() { return surfaces_[name]; },
+                                            [this, name](const std::string & surface) {
+                                              mc_rtc::log::info("[ShowForces] Surface {} selected", surface);
+                                              surfaces_[name] = surface;
+                                            }));
       // mc  _rtc::gui::FormDataComboInput{"R0 surface", false, {"surfaces", "$R0"}},
 
       ctl.gui()->addElement(fsCategory, ElementsStacking::Horizontal,

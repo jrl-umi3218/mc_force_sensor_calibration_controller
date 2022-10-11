@@ -65,13 +65,15 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
         });
   }
 
-  ctl.gui()->addElement(
-      {}, mc_rtc::gui::NumberSlider("Progress", [this]() { return dt_; }, [](double) {}, 0, duration_),
-      mc_rtc::gui::Button("Stop Motion", [this]() {
-        mc_rtc::log::warning("[{}] Motion was interrupted before it's planned duration ({:.2f}/{:.2f}s)", name(), dt_,
-                             duration_);
-        interrupted_ = true;
-      }));
+  ctl.gui()->addElement({},
+                        mc_rtc::gui::NumberSlider(
+                            "Progress", [this]() { return dt_; }, [](double) {}, 0, duration_),
+                        mc_rtc::gui::Button("Stop Motion", [this]() {
+                          mc_rtc::log::warning(
+                              "[{}] Motion was interrupted before it's planned duration ({:.2f}/{:.2f}s)", name(), dt_,
+                              duration_);
+                          interrupted_ = true;
+                        }));
 }
 
 bool CalibrationMotion::run(mc_control::fsm::Controller & ctl_)
