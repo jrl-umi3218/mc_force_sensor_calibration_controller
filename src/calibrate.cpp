@@ -3,6 +3,7 @@
 #include <ceres/ceres.h>
 
 #include <mc_rtc/constants.h>
+#include <mc_rtc/io_utils.h>
 #include <RBDyn/FK.h>
 #include <SpaceVecAlg/SpaceVecAlg>
 
@@ -85,6 +86,42 @@ struct Minimize
   }
 };
 
+inline std::vector<std::string> getSuccessorBodies(const mc_rbdyn::Robot & robot_, const std::string & rootBody)
+{
+  auto & robot = const_cast<mc_rbdyn::Robot &>(robot_); // For successorJoints,
+                                                        // should be const
+  auto bIdx = robot.bodyIndexByName(rootBody);
+  // Graph of successor joint built using robot's root as the root of the graph
+  // This returns a map of
+  // - BODY1 -> [SUCCESSOR JOINT1 of BODY1, SUCCESSOR JOINT2 of BODY1.. ]
+  // - BODYN -> [SUCCESSOR JOINT1 of BODYN, SUCCESSOR JOINT2 of BODYN.. ]
+  auto successorJointsGraph = robot.mbg().successorJoints(robot.mb().body(0).name());
+
+  std::function<std::vector<std::string>(const std::vector<std::string> & succJoints)> computeSuccBodyNames;
+
+  computeSuccBodyNames = [&successorJointsGraph, &robot,
+                          &computeSuccBodyNames](const std::vector<std::string> & succJoints) {
+    std::vector<std::string> mass;
+    for(const auto & joint : succJoints)
+    {
+      mc_rtc::log::info("Successor joint is {}", joint);
+      auto successorBodyIdx = robot.mb().successor(robot.mb().jointIndexByName(joint));
+      const auto & successorBodyName = robot.mb().body(successorBodyIdx).name();
+      const auto & successorJoints = successorJointsGraph.at(successorBodyName);
+      mc_rtc::log::info("Adding body", successorBodyName);
+      // Mass of the successor body of this joint + mass of all its successors
+      mass.push_back(successorBodyName);
+      for(const auto & body : computeSuccBodyNames(successorJoints))
+      {
+        mass.push_back(body);
+      }
+    }
+    return mass;
+  };
+
+  return computeSuccBodyNames(successorJointsGraph[rootBody]);
+}
+
 CalibrationResult calibrate(const mc_rbdyn::Robot & robot,
                             const std::string & sensorN,
                             const Measurements & measurements,
@@ -92,7 +129,52 @@ CalibrationResult calibrate(const mc_rbdyn::Robot & robot,
 {
   CalibrationResult result;
   const auto & sensor = robot.forceSensor(sensorN);
-  result.mass = robot.mb().body(robot.bodyIndexByName(sensor.parentBody())).inertia().mass();
+  const auto & X_0_parent = robot.bodyPosW(sensor.parentBody());
+
+  // Compute initial guess from the robot model:
+  // - mass: mass of all links under the force sensor. This assumes:
+  //   1/ That the force sensor is attached to its parent link in the model (and
+  //   thus that its mass is accounted for in the parent link)
+  //   2/ That the mass of all child links under the force sensor is correct
+  auto successorBodies = getSuccessorBodies(robot, sensor.parentBody());
+  double totalMass = 0;
+  Eigen::Vector3d com = Eigen::Vector3d::Zero();
+  if(successorBodies.size())
+  {
+    mc_rtc::log::info("Force sensor: {}", sensor.name());
+    mc_rtc::log::info("Parent body: {}", sensor.parentBody());
+    mc_rtc::log::info("Successor bodies: {}", mc_rtc::io::to_string(successorBodies));
+    auto & mb = robot.mb();
+    auto & mbc = robot.mbc();
+    for(const auto & bodyName : successorBodies)
+    {
+      auto bodyIndex = robot.mb().bodyIndexByName(bodyName);
+      const auto & body = robot.mb().body(bodyIndex);
+      double mass = body.inertia().mass();
+      totalMass += mass;
+      auto X_parent_body = mbc.bodyPosW[bodyIndex] * X_0_parent.inv();
+      sva::PTransformd scaledBobyPosW(X_parent_body.rotation(), mass * X_parent_body.translation());
+      com += (sva::PTransformd(body.inertia().momentum()) * scaledBobyPosW).translation();
+    }
+    if(totalMass > 0)
+    {
+      com /= totalMass;
+    }
+    else
+    {
+      mc_rtc::log::warning(
+          "Warning: no mass provided for the bodies attached to force sensor \"{}\", assuming mass = 0 and CoM=[0,0,0]",
+          sensor.name());
+    }
+  }
+
+  result.mass = totalMass;
+  result.com[0] = com[0];
+  result.com[1] = com[1];
+  result.com[2] = com[2];
+  mc_rtc::log::info("Initial guess:");
+  mc_rtc::log::info("\tMass of successor bodies: {}", totalMass);
+  mc_rtc::log::info("\tCoM of successor bodies (w.r.t sensor's parent link): {}", com.transpose());
 
   // Build the problem.
   ceres::Problem problem;
