@@ -86,7 +86,9 @@ struct Minimize
   }
 };
 
-inline std::vector<std::string> getSuccessorBodies(const mc_rbdyn::Robot & robot_, const std::string & rootBody)
+inline std::vector<std::string> getSuccessorBodies(const mc_rbdyn::Robot & robot_,
+                                                   const std::string & rootBody,
+                                                   bool includeRoot = false)
 {
   auto & robot = const_cast<mc_rbdyn::Robot &>(robot_); // For successorJoints,
                                                         // should be const
@@ -99,9 +101,13 @@ inline std::vector<std::string> getSuccessorBodies(const mc_rbdyn::Robot & robot
 
   std::function<std::vector<std::string>(const std::vector<std::string> & succJoints)> computeSuccBodyNames;
 
-  computeSuccBodyNames = [&successorJointsGraph, &robot,
+  std::vector<std::string> successorBodyNames;
+  if(includeRoot)
+  {
+    successorBodyNames.push_back(rootBody);
+  }
+  computeSuccBodyNames = [&successorBodyNames, &successorJointsGraph, &robot,
                           &computeSuccBodyNames](const std::vector<std::string> & succJoints) {
-    std::vector<std::string> mass;
     for(const auto & joint : succJoints)
     {
       mc_rtc::log::info("Successor joint is {}", joint);
@@ -109,14 +115,11 @@ inline std::vector<std::string> getSuccessorBodies(const mc_rbdyn::Robot & robot
       const auto & successorBodyName = robot.mb().body(successorBodyIdx).name();
       const auto & successorJoints = successorJointsGraph.at(successorBodyName);
       mc_rtc::log::info("Adding body", successorBodyName);
-      // Mass of the successor body of this joint + mass of all its successors
-      mass.push_back(successorBodyName);
-      for(const auto & body : computeSuccBodyNames(successorJoints))
-      {
-        mass.push_back(body);
-      }
+      // Name of the successor body of this joint + name of all its successors
+      successorBodyNames.push_back(successorBodyName);
+      computeSuccBodyNames(successorJoints);
     }
-    return mass;
+    return successorBodyNames;
   };
 
   return computeSuccBodyNames(successorJointsGraph[rootBody]);
@@ -136,7 +139,9 @@ CalibrationResult calibrate(const mc_rbdyn::Robot & robot,
   //   1/ That the force sensor is attached to its parent link in the model (and
   //   thus that its mass is accounted for in the parent link)
   //   2/ That the mass of all child links under the force sensor is correct
-  auto successorBodies = getSuccessorBodies(robot, sensor.parentBody());
+  // FIXME for now include the parent body in the computation as HRP2 model is
+  // buggy. Remove "true" argument once fixed
+  auto successorBodies = getSuccessorBodies(robot, sensor.parentBody(), true);
   double totalMass = 0;
   Eigen::Vector3d com = Eigen::Vector3d::Zero();
   if(successorBodies.size())
