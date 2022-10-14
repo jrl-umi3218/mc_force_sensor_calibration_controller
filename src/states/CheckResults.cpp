@@ -48,18 +48,21 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
 
     ctl.gui()->addPlot(
         sensorN, plot::X({"t", {t_ + 0, t_ + duration}}, [this]() { return t_; }),
-        plot::Y("Wrenches calibrated (x)",
-                [&robot, &sensor]() { return sensor.wrenchWithoutGravity(robot).force().x(); }, Color::Red,
-                Style::Solid),
-        plot::Y("Wrenches calibrated (y)",
-                [&robot, &sensor]() { return sensor.wrenchWithoutGravity(robot).force().y(); }, Color::Green,
-                Style::Solid),
-        plot::Y("Wrenches calibrated (y)",
-                [&robot, &sensor]() { return sensor.wrenchWithoutGravity(robot).force().z(); }, Color::Blue,
-                Style::Solid),
-        plot::Y("Wrenches raw(x)", [&sensor]() { return sensor.wrench().force().x(); }, Color::Red, Style::Dashed),
-        plot::Y("Wrenches raw(y)", [&sensor]() { return sensor.wrench().force().y(); }, Color::Green, Style::Dashed),
-        plot::Y("Wrenches raw(z)", [&sensor]() { return sensor.wrench().force().z(); }, Color::Blue, Style::Dashed));
+        plot::Y(
+            "Wrenches calibrated (x)", [&robot, &sensor]() { return sensor.wrenchWithoutGravity(robot).force().x(); },
+            Color::Red, Style::Solid),
+        plot::Y(
+            "Wrenches calibrated (y)", [&robot, &sensor]() { return sensor.wrenchWithoutGravity(robot).force().y(); },
+            Color::Green, Style::Solid),
+        plot::Y(
+            "Wrenches calibrated (y)", [&robot, &sensor]() { return sensor.wrenchWithoutGravity(robot).force().z(); },
+            Color::Blue, Style::Solid),
+        plot::Y(
+            "Wrenches raw(x)", [&sensor]() { return sensor.wrench().force().x(); }, Color::Red, Style::Dashed),
+        plot::Y(
+            "Wrenches raw(y)", [&sensor]() { return sensor.wrench().force().y(); }, Color::Green, Style::Dashed),
+        plot::Y(
+            "Wrenches raw(z)", [&sensor]() { return sensor.wrench().force().z(); }, Color::Blue, Style::Dashed));
   }
 
   ctl.gui()->addElement(
