@@ -34,7 +34,12 @@ void RunCalibrationScript::start(mc_control::fsm::Controller & ctl_)
   sensors_ = robotConf("forceSensors");
   bool verbose = robotConf("verboseSolver", false);
   auto & measurements = ctl_.datastore().get<SensorMeasurements>("measurements");
+  start_ = false;
   th_ = std::thread([&, verbose, this]() {
+    while(!start_)
+    {
+      std::this_thread::sleep_for(std::chrono::microseconds(10));
+    }
     for(const auto & s : sensors_)
     {
       mc_rtc::log::info("Start calibration optimization for {}", s);
@@ -80,13 +85,14 @@ void RunCalibrationScript::start(mc_control::fsm::Controller & ctl_)
   int policy = 0;
   sched_param param{};
   pthread_getschedparam(th_handle, &policy, &param);
-  param.sched_priority = 80;
+  param.sched_priority = 10;
   if(pthread_setschedparam(th_handle, SCHED_RR, &param) != 0)
   {
     mc_rtc::log::warning("[{}] Failed to lower calibration thread priority. If you are running on a real-time system, "
                          "this might cause latency to the real-time loop.");
   }
 #endif
+  start_ = true;
 }
 
 bool RunCalibrationScript::run(mc_control::fsm::Controller &)

@@ -20,6 +20,7 @@ struct RunCalibrationScript : mc_control::fsm::State
 
 private:
   std::thread th_;
+  std::atomic<bool> start_{false};
   std::atomic<bool> completed_{false};
   bool success_ = true;
   std::string outputPath_;
