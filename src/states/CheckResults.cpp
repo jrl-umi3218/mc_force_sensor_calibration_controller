@@ -40,7 +40,7 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
   {
     const auto filename = calib_path + "/calib_data." + sensorN;
     mc_rtc::log::info("[{}] Loading calibration file {}", name(), filename);
-    auto & sensor = ctl.robot().forceSensor(sensorN);
+    auto & sensor = ctl.robot().data()->forceSensors[ctl.robot().data()->forceSensorsIndex.at(sensorN)];
     sensor.loadCalibrator(filename, ctl.robot().mbc().gravity);
 
     ctl.logger().addLogEntry(sensor.name() + "_calibrated",
