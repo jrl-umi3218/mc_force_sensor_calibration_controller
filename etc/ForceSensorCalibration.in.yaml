@@ -448,29 +448,36 @@ panda_brace_femur:
       panda_joint1: [0.0]
       panda_joint2: [0.0]
       panda_joint3: [0.0]
-      panda_joint4: [-2.0]
+      panda_joint4: [-1.5]
       panda_joint5: [0.0]
-      panda_joint6: [2.0]
+      panda_joint6: [1.875]
       panda_joint7: [0.0]
   motion:
-    duration: 50
+    duration: 60
     stiffness: 10
     percentLimits: 0.8
     joints:
     - name: panda_joint1
-      period: 11
+      period: 21
+      percentLimits: 0.2
     - name: panda_joint2
-      period: 12
+      percentLimits: 0.2
+      period: 22
     - name: panda_joint3
-      period: 13
+      percentLimits: 0.2
+      period: 23
     - name: panda_joint4
-      period: 14
+      percentLimits: 0.2
+      period: 24
     - name: panda_joint5
-      period: 15
+      percentLimits: 0.6
+      period: 25
     - name: panda_joint6
-      period: 16
+      period: 26
+      percentLimits: 0.3
     - name: panda_joint7
-      period: 17
+      period: 27
+      percentLimits: 0.5
   collisions:
   - body1: panda_link6*
     body2: ground
