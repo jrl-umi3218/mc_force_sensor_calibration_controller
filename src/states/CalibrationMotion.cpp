@@ -91,8 +91,14 @@ bool CalibrationMotion::run(mc_control::fsm::Controller & ctl_)
 
   if(dt_ > duration_)
   {
-    output("OK");
-    return true;
+    dt_ = duration_;
+    auto postureTask = ctl_.getPostureTask(ctl_.robot().name());
+    postureTask->refVel(Eigen::VectorXd{ctl_.robot().mb().nrDof()}.setZero());
+    if(postureTask->speed().norm() < 1e-5)
+    {
+      output("OK");
+      return true;
+    }
   }
   else if(interrupted_)
   {
