@@ -73,6 +73,18 @@ To add your own robot, you should add an additional section with the same name a
 
 - `ObserverPipelines`: a state observation pipeline see [here](https://jrl-umi3218.github.io/mc_rtc/json.html#Observers/ObserverPipelines) for supported options. The calibration method requires the orientation of force sensors w.r.t gravity to be known. For floating base robots this means that you need to know at least the orientation of the floating base w.r.t gravity (roll/pitch), and the joint position in order to compute the sensor frame orientation from kinematics.
 - `forceSensors`: Vector of force sensor names to calibrate
+- `initialGuess`: [optional] Map of force sensor names to initial calibration parameters
+  ```yaml
+  initialGuess:
+    LeftHandForceSensor:
+      com: [0, 0, -0.1]
+      mass: 0.3
+      rpy: [0,0,0]
+      offset: [0,0,0,0,0,0]
+    RightHandForceSensor:
+      ...
+  ```
+  If no initial guess are provided, one will be automatically computed from the robot model. This assumes that the children links of the link to which the force sensor is attached contain the correct mass and inertia.
 - `maxPressureThreshold`: Prevent calibration motion if any of the force sensors measures more than this threhold (norm of force).
 - `initial_posture`: Initial robot posture from which the calibration motion starts.
   ```yaml

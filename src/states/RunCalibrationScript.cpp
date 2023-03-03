@@ -33,12 +33,33 @@ void RunCalibrationScript::start(mc_control::fsm::Controller & ctl_)
 
   sensors_ = robotConf("forceSensors");
   bool verbose = robotConf("verboseSolver", false);
-  auto & measurements = ctl_.datastore().get<SensorMeasurements>("measurements");
-  th_ = std::thread([&, verbose, this]() {
-    for(const auto & s : sensors_)
+  std::vector<InitialGuess> guess_;
+  guess_.reserve(sensors_.size());
+
+  for(const auto & s : sensors_)
+  {
+    InitialGuess initialGuess;
+    if(robotConf.has("initialGuess") && robotConf("initialGuess").has(s))
     {
+      initialGuess = robotConf("initialGuess")(s);
+      mc_rtc::log::info("Using provided initial guess for \"{}\":\n{}", s, initialGuess);
+    }
+    else
+    {
+      initialGuess = computeInitialGuessFromModel(ctl_.robot(), s, verbose);
+      mc_rtc::log::info("Computed initial guess for \"{}\" from model:\n{}", s, initialGuess);
+    }
+    guess_.push_back(initialGuess);
+  }
+
+  auto & measurements = ctl_.datastore().get<SensorMeasurements>("measurements");
+  th_ = std::thread([&, verbose, guess_, this]() {
+    for(size_t i = 0; i < sensors_.size(); ++i)
+    {
+      const auto & s = sensors_[i];
+      const auto & initialGuess = guess_[i];
       mc_rtc::log::info("Start calibration optimization for {}", s);
-      auto result = calibrate(ctl_.robot(), s, measurements.at(s), verbose);
+      auto result = calibrate(ctl_.robot(), s, measurements.at(s), initialGuess, verbose);
       success_ = result.success && success_;
       if(result.success)
       {
