@@ -186,7 +186,10 @@ force offset: {}, {}, {}, {}, {}, {})",
   return result;
 }
 
-InitialGuess computeInitialGuessFromModel(const mc_rbdyn::Robot & robot, const std::string & sensorN, bool verbose)
+InitialGuess computeInitialGuessFromModel(const mc_rbdyn::Robot & robot,
+                                          const std::string & sensorN,
+                                          bool includeparent,
+                                          bool verbose)
 {
   InitialGuess guess;
   const auto & sensor = robot.forceSensor(sensorN);
@@ -199,7 +202,7 @@ InitialGuess computeInitialGuessFromModel(const mc_rbdyn::Robot & robot, const s
   //   2/ That the mass of all child links under the force sensor is correct
   // FIXME for now include the parent body in the computation as HRP2 model is
   // buggy. Remove "true" argument once fixed
-  auto successorBodies = getSuccessorBodies(robot, sensor.parentBody(), true);
+  auto successorBodies = getSuccessorBodies(robot, sensor.parentBody(), includeparent);
   double totalMass = 0;
   Eigen::Vector3d com = Eigen::Vector3d::Zero();
   if(successorBodies.size())
@@ -215,6 +218,10 @@ InitialGuess computeInitialGuessFromModel(const mc_rbdyn::Robot & robot, const s
       auto X_parent_body = mbc.bodyPosW[bodyIndex] * X_0_parent.inv();
       sva::PTransformd scaledBobyPosW(X_parent_body.rotation(), mass * X_parent_body.translation());
       com += (sva::PTransformd(body.inertia().momentum()) * scaledBobyPosW).translation();
+      if(verbose)
+      {
+        mc_rtc::log::info("[Initial Guess] Body: {}, Mass: {}", body.name(), mass);
+      }
     }
     if(totalMass > 0)
     {

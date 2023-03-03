@@ -76,12 +76,18 @@ To add your own robot, you should add an additional section with the same name a
 - `initialGuess`: [optional] Map of force sensor names to initial calibration parameters
   ```yaml
   initialGuess:
-    LeftHandForceSensor:
+    LeftHandForceSensor: # Provide an initial guess manually
       com: [0, 0, -0.1]
       mass: 0.3
       rpy: [0,0,0]
       offset: [0,0,0,0,0,0]
-    RightHandForceSensor:
+    RightHandForceSensor: # Or automatically compute the initial guess from the robot model
+      # When true, automatically estimate the mass/CoM of the links attached to the force sensor.
+      # This assumes that the mass and CoM of each link attached to the sensor is correct in the model.
+      autocompute: true
+      # In some models (HRP-2Kai, HRP-5P, HRP-4CR, etc) the force sensor parent link actually contains both the sensor and the link attached to the sensor
+      # Thus to obtain a reasonable initial guess, we need to count the force sensor's parent link. This is somewhat incorrect as it also includes the mass of the force sensor itself, but that's the best estimate we can get without changing the robot model.
+      includeparent: true
       ...
   ```
   If no initial guess are provided, one will be automatically computed from the robot model. This assumes that the children links of the link to which the force sensor is attached contain the correct mass and inertia.

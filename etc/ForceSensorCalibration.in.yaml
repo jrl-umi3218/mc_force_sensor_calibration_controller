@@ -116,6 +116,19 @@ hrp4:
   - RightHandForceSensor
   - LeftFootForceSensor
   - RightFootForceSensor
+  initialGuess:
+    LeftHandForceSensor:
+      autocompute: true
+      includeparent: true
+    RightHandForceSensor:
+      autocompute: true
+      includeparent: true
+    LeftFootForceSensor:
+      autocompute: true
+      includeparent: true
+    RightFootForceSensor:
+      autocompute: true
+      includeparent: true
   maxPressureThreshold: 50
   initial_posture:
     completion:
@@ -163,6 +176,13 @@ hrp4:
 hrp4j:
   ObserverPipelines: *observers
   forceSensors: [LeftFootForceSensor, RightFootForceSensor]
+  initialGuess:
+    LeftFootForceSensor:
+      autocompute: true
+      includeparent: true
+    RightFootForceSensor:
+      autocompute: true
+      includeparent: true
   maxPressureThreshold: 50
   initial_posture:
     completion:
@@ -193,6 +213,19 @@ hrp4cr:
   - RightHandForceSensor
   - LeftFootForceSensor
   - RightFootForceSensor
+  initialGuess:
+    LeftHandForceSensor:
+      autocompute: true
+      includeparent: true
+    RightHandForceSensor:
+      autocompute: true
+      includeparent: true
+    LeftFootForceSensor:
+      autocompute: true
+      includeparent: true
+    RightFootForceSensor:
+      autocompute: true
+      includeparent: true
   maxPressureThreshold: 50
   initial_posture:
     completion:
@@ -244,6 +277,19 @@ hrp5_p:
   - RightHandForceSensor
   - LeftFootForceSensor
   - RightFootForceSensor
+  initialGuess:
+    LeftHandForceSensor:
+      autocompute: true
+      includeparent: true
+    RightHandForceSensor:
+      autocompute: true
+      includeparent: true
+    LeftFootForceSensor:
+      autocompute: true
+      includeparent: true
+    RightFootForceSensor:
+      autocompute: true
+      includeparent: true
   initial_posture:
     completion:
       eval: 0.06
@@ -299,6 +345,19 @@ hrp2_drc:
   - RightHandForceSensor
   - LeftFootForceSensor
   - RightFootForceSensor
+  initialGuess:
+    LeftHandForceSensor:
+      autocompute: true
+      includeparent: true
+    RightHandForceSensor:
+      autocompute: true
+      includeparent: true
+    LeftFootForceSensor:
+      autocompute: true
+      includeparent: true
+    RightFootForceSensor:
+      autocompute: true
+      includeparent: true
   maxPressureThreshold: 50
   initial_posture:
     completion:
@@ -441,6 +500,11 @@ panda_brace_femur:
       - type: Encoder
   forceSensors:
   - BraceTopForceSensor
+  initialGuess:
+    BraceTopForceSensor:
+      autocompute: true
+      includeparent: false
+      verbose: true
   initial_posture:
     completion:
       eval: 0.05
