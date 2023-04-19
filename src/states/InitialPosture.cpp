@@ -6,7 +6,7 @@
 
 void InitialPosture::start(mc_control::fsm::Controller & ctl)
 {
-  const auto & robotConf = ctl.config()(ctl.robot().name());
+  const auto & robotConf = ctl.config()("robots")(ctl.robot().name());
   if(!robotConf.has("initial_posture"))
   {
     mc_rtc::log::error_and_throw<std::runtime_error>("[{}] Calibration controller expects an initial_posture entry",

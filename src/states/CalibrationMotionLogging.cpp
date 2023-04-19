@@ -15,9 +15,9 @@ void CalibrationMotionLogging::start(mc_control::fsm::Controller & ctl_)
   auto & ctl = static_cast<ForceSensorCalibration &>(ctl_);
 
   auto & robot = ctl.robot();
-  auto robotConf = ctl.config()(robot.name());
+  auto robotConf = ctl.config()("robots")(robot.name());
 
-  singularityThreshold_ = ctl.config()("SingularityThreshold");
+  singularityThreshold_ = robotConf("SingularityThreshold", ctl.config()("SingularityThreshold"));
 
   if(!robotConf.has("forceSensors"))
   {

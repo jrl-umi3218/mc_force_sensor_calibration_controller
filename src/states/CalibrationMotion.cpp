@@ -6,7 +6,7 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
 {
   ctl.datastore().make_call("CalibrationMotion::Stop", [this]() { interrupted_ = true; });
   auto & robot = ctl.robot();
-  auto robotConf = ctl.config()(robot.name());
+  auto robotConf = ctl.config()("robots")(robot.name());
   if(!robotConf.has("motion"))
   {
     mc_rtc::log::error("[{}] Calibration controller expects a joints entry", name());
@@ -91,8 +91,14 @@ bool CalibrationMotion::run(mc_control::fsm::Controller & ctl_)
 
   if(dt_ > duration_)
   {
-    output("OK");
-    return true;
+    dt_ = duration_;
+    auto postureTask = ctl_.getPostureTask(ctl_.robot().name());
+    postureTask->refVel(Eigen::VectorXd{ctl_.robot().mb().nrDof()}.setZero());
+    if(postureTask->speed().norm() < 1e-5)
+    {
+      output("OK");
+      return true;
+    }
   }
   else if(interrupted_)
   {

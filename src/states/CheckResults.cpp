@@ -16,7 +16,7 @@ void CheckResults::start(mc_control::fsm::Controller & ctl)
   using namespace mc_rtc::gui;
   using Style = mc_rtc::gui::plot::Style;
 
-  const auto & robotConf = ctl.config()(robot.name());
+  const auto & robotConf = ctl.config()("robots")(robot.name());
   if(!robotConf.has("forceSensors"))
   {
     mc_rtc::log::error_and_throw<std::runtime_error>("[{}] Calibration controller expects a forceSensors entry",
