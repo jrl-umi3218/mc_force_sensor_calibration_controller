@@ -87,7 +87,7 @@ To add your own robot, you should add an additional section with the same name a
       autocompute: true
       # In some models (HRP-2Kai, HRP-5P, HRP-4CR, etc) the force sensor parent link actually contains both the sensor and the link attached to the sensor
       # Thus to obtain a reasonable initial guess, we need to count the force sensor's parent link. This is somewhat incorrect as it also includes the mass of the force sensor itself, but that's the best estimate we can get without changing the robot model.
-      includeparent: true
+      includeParent: true
       ...
   ```
   If no initial guess are provided, one will be automatically computed from the robot model. This assumes that the children links of the link to which the force sensor is attached contain the correct mass and inertia.

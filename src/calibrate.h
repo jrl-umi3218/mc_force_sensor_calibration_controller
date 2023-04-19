@@ -73,7 +73,7 @@ struct CalibrationResult
 
 InitialGuess computeInitialGuessFromModel(const mc_rbdyn::Robot & robot,
                                           const std::string & sensor,
-                                          bool includeparent = false,
+                                          bool includeParent = false,
                                           bool verbose = false);
 
 CalibrationResult calibrate(const mc_rbdyn::Robot & robot,

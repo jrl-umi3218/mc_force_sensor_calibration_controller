@@ -188,7 +188,7 @@ force offset: {}, {}, {}, {}, {}, {})",
 
 InitialGuess computeInitialGuessFromModel(const mc_rbdyn::Robot & robot,
                                           const std::string & sensorN,
-                                          bool includeparent,
+                                          bool includeParent,
                                           bool verbose)
 {
   InitialGuess guess;
@@ -202,7 +202,7 @@ InitialGuess computeInitialGuessFromModel(const mc_rbdyn::Robot & robot,
   //   2/ That the mass of all child links under the force sensor is correct
   // FIXME for now include the parent body in the computation as HRP2 model is
   // buggy. Remove "true" argument once fixed
-  auto successorBodies = getSuccessorBodies(robot, sensor.parentBody(), includeparent);
+  auto successorBodies = getSuccessorBodies(robot, sensor.parentBody(), includeParent);
   double totalMass = 0;
   Eigen::Vector3d com = Eigen::Vector3d::Zero();
   if(successorBodies.size())
