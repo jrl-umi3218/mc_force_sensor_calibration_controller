@@ -8,7 +8,7 @@
 
 void PressureCheck::start(mc_control::fsm::Controller & ctl)
 {
-  const auto & robotConf = ctl.config()(ctl.robot().name());
+  const auto & robotConf = ctl.config()("robots")(ctl.robot().name());
   robotConf("maxPressureThreshold", maxPressure_);
   robotConf("forceSensors", forceSensors_);
 

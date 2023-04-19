@@ -6,7 +6,7 @@ void CalibrationMotion::start(mc_control::fsm::Controller & ctl)
 {
   ctl.datastore().make_call("CalibrationMotion::Stop", [this]() { interrupted_ = true; });
   auto & robot = ctl.robot();
-  auto robotConf = ctl.config()(robot.name());
+  auto robotConf = ctl.config()("robots")(robot.name());
   if(!robotConf.has("motion"))
   {
     mc_rtc::log::error("[{}] Calibration controller expects a joints entry", name());

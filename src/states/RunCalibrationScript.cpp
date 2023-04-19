@@ -19,7 +19,7 @@ void RunCalibrationScript::configure(const mc_rtc::Configuration &) {}
 void RunCalibrationScript::start(mc_control::fsm::Controller & ctl_)
 {
   auto & robot = ctl_.robot();
-  auto robotConf = ctl_.config()(robot.name());
+  auto robotConf = ctl_.config()("robots")(robot.name());
   outputPath_ = "/tmp/calib-force-sensors-result-" + ctl_.robot().name();
 
   // Attempt to create the output folder
