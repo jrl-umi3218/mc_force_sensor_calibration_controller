@@ -9,6 +9,25 @@ namespace bfs = boost::filesystem;
 #include "../ForceSensorCalibration.h"
 #include "../calibrate.h"
 
+#ifdef __linux__
+
+#include <sched.h>
+
+void reset_affinity()
+{
+  cpu_set_t cpu_set;
+  CPU_ZERO(&cpu_set);
+  for(unsigned int i = 0; i < std::thread::hardware_concurrency(); ++i) { CPU_SET(i, &cpu_set); }
+  int result = sched_setaffinity(0, sizeof(cpu_set_t), &cpu_set);
+  if(result != 0) { perror("sched_setaffinity"); }
+}
+
+#else
+
+void reset_affinity() {}
+
+#endif
+
 RunCalibrationScript::~RunCalibrationScript()
 {
   th_.join();
@@ -65,6 +84,7 @@ void RunCalibrationScript::start(mc_control::fsm::Controller & ctl_)
 
   auto & measurements = ctl_.datastore().get<SensorMeasurements>("measurements");
   th_ = std::thread([&, verbose, guess_, this]() {
+    reset_affinity();
     for(size_t i = 0; i < sensors_.size(); ++i)
     {
       const auto & s = sensors_[i];
